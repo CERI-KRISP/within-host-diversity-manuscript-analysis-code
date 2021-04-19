@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1618856225436.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "89BC7EB",
+    "lastKnownWriteTime" : 1618861442,
+    "last_content_update" : 1618861442421,
+    "path" : "~/temp/Collaborations/covid/whd/analysis/index.Rmd",
+    "project_path" : "index.Rmd",
+    "properties" : {
+        "cursorPosition" : "644,20",
+        "last_setup_crc32" : "770EE95Ac9d1d2c4",
+        "scrollLine" : "642"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

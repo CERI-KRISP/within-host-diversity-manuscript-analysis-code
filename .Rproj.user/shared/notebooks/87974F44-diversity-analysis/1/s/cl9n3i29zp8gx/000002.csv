@@ -1,0 +1,6 @@
+"0","## gene length"
+"0","## Get gene lengths"
+"0","annot <- read_csv(""~/temp/Collaborations/covid/whd/SARS-CoV-2/genomics/4-Variation/annot.txt"", "
+"0","                  col_types = cols(X1 = col_skip()))"
+"2","Missing column names filled in: 'X1' [1]"
+"0","head(annot)"

@@ -1,0 +1,23 @@
+"0","CH3_tempest_data <- read_delim(""data/CH3_tempest.data.csv"", ""\t"", escape_double = FALSE, trim_ws = TRUE)"
+"2","Parsed with column specification:
+cols(
+  tip = [31mcol_character()[39m,
+  date = [32mcol_double()[39m,
+  distance = [32mcol_double()[39m,
+  residual = [32mcol_double()[39m
+)
+"
+"0","ggscatter(CH3_tempest_data, x = ""distance"", y = ""residual"","
+"0","                 add = ""reg.line"",  # Add regressin line"
+"0","                 add.params = list(color = ""blue"", fill = ""lightgray""), # Customize reg. line"
+"0","                 conf.int = TRUE # Add confidence interval"
+"0","  )+ xlab(""Distance"") +"
+"0","  ylab(""Residual"") + "
+"0","  #facet_grid(cols = vars(Sample)) +"
+"0","  stat_cor(method = ""pearson"") + "
+"0","  theme_bw()+"
+"0","  theme(axis.title.x = element_text(size=15),"
+"0","        axis.title.y = element_text(size=15),"
+"0","        axis.text=element_text(size=12),"
+"0","        legend.title = element_text(size = 15),"
+"0","        legend.text = element_text(size = 12))"

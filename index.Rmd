@@ -1,0 +1,703 @@
+---
+title: "Within Host Diversity Analysis"
+author: "San Emmanuel James"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: true
+    theme: united
+    code_folding: hide
+    fig_crop: false
+  pdf_document: default
+---
+
+```{r load-packages-and-set-global-vars, include=FALSE}
+rm(list = ls())
+
+## Load necessary packages
+library(readxl)
+library(writexl)
+library(readr)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ComplexUpset)
+library(kableExtra)
+library(pheatmap)
+library(RColorBrewer)
+library(broom)
+library(gg.gap)
+library(ggpubr)
+library(hrbrthemes)
+library(viridis)
+library(stringr)
+library(ggrepel)
+
+source("scripts/whd_functions.R")
+
+## Global variables
+
+# Matched sequence ids
+st_aug <- c("KRISP-0016", "KRISP-0017", "KRISP-0019", "KRISP-0055", "KRISP-0056", "KRISP-0057", "KRISP-0058", "KRISP-0058M", "KRISP-0066", "KRISP-0067", "KRISP-0112", "KRISP-0081", "KRISP-0084", "KRISP-0091","KRISP-0040", "KRISP-0088", "KRISP-0115", "KRISP-0089", "KRISP-0021", "KRISP-0113")
+
+## Mutation categories
+mutation_cats <- c("CH1_iSNV", "CH1_SNV", "CH3_iSNV", "CH3_SNV")
+
+## genome orde
+c19_genes <- c("ORF1ab", "S","ORF3a","E","M","ORF6","ORF7a","ORF7b","ORF8","N","ORF10")
+
+OutbreakPalleteNamed <- c("#7CAE00", "#ff9900", "#6699CC", "#ff00ff")
+names(OutbreakPalleteNamed) <- mutation_cats
+
+impactPalleteNamed <- c("#ff3300", "#ff9900", "#6699CC", "#7CAE00")
+VarImpact <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
+names(impactPalleteNamed) <- VarImpact
+
+genePallet <- c(ORF1ab = "#C77CFF", S = "#7CAE00", ORF3a = "#ffcc66", E ="#ff0033", M = "#ff9900", ORF6 = "#6699CC", ORF7a = "#993366", ORF8 = "#99ccff", N = "#ff33cc", ORF10 ="#3B889F")
+
+
+orfPallet <- c("5_UTR" ="#999900", NSP1 = "#ff3300", NSP2 = "#ff9900", NSP3 = "#C77CFF", NSP4 = "#ffcc66", NSP5 = "#6699CC", NSP6 = "#336699", NSP7 = "#9933cc", NSP8 = "#99d8c9", NSP9 = "#009966", NSP10 = "#99ffff", NSP11 =  "#ff00ff", NSP12 = "#fa9fb5", NSP13 = "#fec44f", NSP14 = "#99ccff",  NSP15 = "#ff9900", NSP16 = "#f7fcb9", S = "#7CAE00", ORF3a = "#999966", E = "#ff0033", M = "#ff9900", ORF6 = "#ffff33",  ORF7a = "#993366", ORF7b = "#cc99cc",  ORF8 = "#663366", N = "#bcbddc", ORF10 = "#cc6666", "3_UTR" = "#006633")
+
+```
+
+
+```{r setup, include=FALSE}
+## setup environment
+knitr::opts_chunk$set(echo = TRUE, 
+                      out.height = "\\textheight",  
+                      out.width = "\\textwidth",
+                      out.extra = "keepaspectratio=false")
+##Penalty for scientific notation
+options(scipen=2000) 
+```
+
+## Introduction
+
+Within host diversity analysis of two nosocomial outbreaks (CH1 and CH3).
+
+## Import and preprocess datasets
+
+```{r import-and-preprocess, include=FALSE}
+
+## Fastq sequence names clean
+sample_ids <- read_excel("data/CH1_CH3_fastqIds.xlsx")
+
+## read in metadata
+samples.metadata <- read_xlsx("data/CH1_CH3_Metadata.xlsx")
+samples.metadata[samples.metadata$name == "KPCOVID_0035", "outbreak_id"] <- "R1A"
+samples.metadata[samples.metadata$name == "KPCOVID_0041", "outbreak_id"] <- "R1B"
+
+## touch up, switch ? to NA for missing age
+samples.metadata <- samples.metadata %>% mutate(age = ifelse(age == "?", NA, age))
+
+## Summary stats
+median(samples.metadata$age, na.rm = T)
+IQR(samples.metadata$age, na.rm = T)
+
+## Genome Coverage - from genomedetective
+seq_details <- read_excel("data/COVID_positives_additional_metadata.xlsx")
+seq_details_genomecov <- seq_details[, c("KRISP ID","Coverage_after_clean")]
+colnames(seq_details_genomecov) <- c("seq", "genomecov")
+seq_details_genomecov <- seq_details_genomecov[seq_details_genomecov$seq %in% sample_ids$sampleName, ]
+seq_details_genomecov$genomecov <- gsub(",",".", seq_details_genomecov$genomecov)
+seq_details_genomecov$genomecov <- as.numeric(seq_details_genomecov$genomecov)
+
+
+## Depth of coverage >= 50
+cov50 <- read_table2("data/cov50.txt", col_names = FALSE)
+colnames(cov50) <- c("Seq", "PositionsCovGT50")
+cov50$PercGenCovGT50 <- round((cov50$PositionsCovGT50/29903),2)
+cov50$DepthCov50PercGT80 <- ifelse(cov50$PercGenCovGT50 > 0.79, 1, 0)
+
+## Depth of coverage >= 100
+cov100 <- read_table2("data/cov100.txt", col_names = FALSE)
+colnames(cov100) <- c("Seq", "PositionsCovGT100")
+cov100$PercGenCovGT100 <- round((cov100$PositionsCovGT100/29903),2)
+cov100$DepthCov100PercGT80 <- ifelse(cov100$PercGenCovGT100 > 0.79, 1, 0)
+
+
+## quick qc - check for dups
+cov_ids <- cov50$Seq
+cov_ids <- sapply(str_split(cov_ids, "_", n = 2, simplify = FALSE), `[`, 1)
+length(cov_ids)
+
+
+cov <- inner_join(cov50, cov100, by = "Seq")
+cov$Seq <- sapply(str_split(cov$Seq, "_", n = 2, simplify = FALSE), `[`, 1)
+
+cov_ <- inner_join(cov, sample_ids, by = c("Seq"="seqIds"))
+cov_ <- inner_join(cov_, seq_details_genomecov, by = c("sampleName" = "seq"))
+
+## Get average read depths and add colum names
+bamstats <- read_table2("data/bamstats.txt", col_names = FALSE) #see bash script
+colnames(bamstats) <- c("sample","average_depth", "nreads", "nmapped")
+bamstats$sample <- sapply(str_split(bamstats$sample, "_", n = 2, simplify = FALSE), `[`, 1)
+
+cov_ <- inner_join(cov_, bamstats, by = c("Seq" = "sample"))
+## Number of whole genomes with 80% coverage have reads greater than or equal to 50 fold.
+sum(cov_$PercGenCovGT50 > 0.79) ##91
+sum(cov_$PercGenCovGT100 > 0.79) ##82
+```
+
+### Import and Process Variants
+
+```{r}
+##import data
+cmd6 <- "ls -1 data/snpsift/*_sf.table"
+snpSiftList <- system(cmd6, intern = T)
+
+df_snps = data.frame()
+
+for (sfreport in snpSiftList) {
+  ps0 <- read_delim(sfreport, "\t", escape_double = FALSE, col_types = cols(.default = "c"), trim_ws = TRUE)
+  #message("Processing: ", sfreport)
+  
+  fname <- sapply(str_split(sfreport, "/", n = 3, simplify = FALSE), `[`, 3)
+  fname <- sapply(str_split(fname, "_", n = 2, simplify = FALSE), `[`, 1)
+  
+  ps0$Sample <- fname
+  
+  df_snps <- rbind(df_snps, ps0)
+  #message("...done!")
+}
+
+
+colnames(df_snps)[c(6,9:11)] <- c("Depth","Biological Effect", "IMPACT", "GENE")
+
+df_snps$`Biological Effect` <- gsub("_variant","",df_snps$`Biological Effect`)
+
+df_snps <- df_snps %>% separate(DP4, c("R1+", "R1-", "R2+", "R2-"))
+
+## reads supporting ref (R1) and alt(R2):
+## +/- forward/reverse strand
+
+df_snps[, c(2,5:11)] <- apply(df_snps[, c(2,5:11)], 2, as.numeric)
+df_snps$R1 <- df_snps$`R1+` + df_snps$`R1-`
+df_snps$R2 <- df_snps$`R2+` + df_snps$`R2-`
+
+df_snvs_isnvs <- df_snps[,c(15,1:6,16:17,7:14)]
+#df_snvs_isnvs[, c(3,6:13)] <- apply(df_snvs_isnvs[, c(3,6:13)],2,as.numeric)
+df_snvs_isnvs <- df_snvs_isnvs %>% filter(!IMPACT == "MODIFIER" & AF >= 0.03) %>% 
+  mutate(`Biological Effect Cat` = case_when(`Biological Effect` == "missense" ~ "non-synonymous",
+                                             `Biological Effect` == "stop_gained" ~ "nonsense",
+                                             `Biological Effect` == "stop_lost" ~ "nonsense",
+                                             `Biological Effect` == "start_lost" ~ "nonsense",
+                                             `Biological Effect` == "splice_region&synonymous" ~ "synonymous",
+                                             `Biological Effect` == "stop_lost&splice_region" ~ "nonsense",
+                                             TRUE ~ `Biological Effect`))
+##summaries - mutations, isnvs, snvs
+#dim(df_snvs_isnvs) ##Number of mutations surviving - 2563
+
+##filter out multiallelic positions
+#df_snvs_isnvs %>% count(Sample,POS,REF) %>% filter(n > 1) %>% View()
+df_snvs_isnvs <- df_snvs_isnvs %>% mutate(alleles = paste0(Sample,"_",POS,"_",REF))
+dupps <- df_snvs_isnvs %>% group_by(Sample,POS,REF) %>% count() %>% filter(n > 1) %>% mutate(alleles = paste0(Sample,"_",POS,"_",REF))
+df_snvs_isnvs_fill <- df_snvs_isnvs %>% 
+                          filter(!(alleles %in% dupps$alleles)) ## 2399 surviving
+df_snvs_isnvs_fill$alleles <- NULL
+
+
+## add protein coding region annotation
+## protein length
+c19_protein_locations <- read.table(file='data/C19_proteins.txt',header=FALSE,
+                     sep=':',col.names=c('Protein','position'))
+c19_protein_locations <- c19_protein_locations %>% 
+                            mutate(Protein = str_trim(Protein),
+                                   position =  str_replace(position, "\\n", "|")) %>% 
+                                   separate(position, sep = "\\|", into = c("begin", "end"))
+
+rownames(c19_protein_locations) <- c19_protein_locations$Protein
+
+
+df_snvs_isnvs_ann <- sqldf::sqldf("select df_snvs_isnvs_fill.*, protein from df_snvs_isnvs_fill left join c19_protein_locations on df_snvs_isnvs_fill.POS >= begin and df_snvs_isnvs_fill.POS <= end")
+#dim(df_snvs_isnvs_ann) #4215
+
+
+## keep only one entry for each allele
+#df_snvs_isnvs_ann %>% count(Sample,POS,REF,ALT,AF) %>% filter(n > 1) %>% View()
+df_snvs_isnvs_ann_fil <- df_snvs_isnvs_ann %>% distinct(Sample,POS,REF,ALT,AF, .keep_all = TRUE)
+
+df_snvs_isnvs_ann_fil <- df_snvs_isnvs_ann_fil %>%  mutate(Protein = factor(Protein, levels = rownames(c19_protein_locations)),
+                                                           GENE = factor(GENE, levels = c19_genes))
+#dim(df_snvs_isnvs_ann_fil) #4165
+#write.csv(df_snvs_isnvs, "KPCOVID_Variants_annR.csv", row.names = F)
+```
+
+```{r}
+
+## iSNVs at greater than 2%
+#df_snvs_isnvs <- process_intrahost_variants(df_snvs_isnvs_ann_fil)
+df_snvs_isnvs <- process_intrahost_alt_minor(df_snvs_isnvs_ann_fil)
+df_isnvs <- df_snvs_isnvs %>%  filter( AF <= 0.5)
+df_snvs <- df_snvs_isnvs %>% filter(AF > 0.5 )
+
+## Compare no. of minor alleles in each sample to genome coverage
+alleleCount_all_isnvs <- df_isnvs %>% 
+  count(Sample)
+colnames(alleleCount_all_isnvs) <- c("Seq", "iSNVs")
+alleleCount_all_isnvs$Seq <- sapply(str_split(alleleCount_all_isnvs$Seq, "_", n = 2, simplify = FALSE), `[`, 1)
+
+## Compare no. of major alleles in each sample to genome coverage
+alleleCount_all_snvs <- df_snvs %>% 
+  count(Sample)
+colnames(alleleCount_all_snvs) <- c("Seq", "SNVs")
+alleleCount_all_snvs$Seq <- sapply(str_split(alleleCount_all_snvs$Seq, "_", n = 2, simplify = FALSE), `[`, 1)
+
+
+## join allele counts and coverage details
+cov_ <- left_join(cov_, alleleCount_all_isnvs, by = c("Seq" = "Seq")) #Check why some samples do not have minor alleles?
+cov_ <- left_join(cov_, alleleCount_all_snvs, by = c("Seq" = "Seq")) #Check why some samples do not have minor alleles?
+#cov_ <- cov_ %>% mutate(iSNVs = ifelse(is.na(iSNVs), 0, iSNVs))
+
+genomicStats <- cov_[, c(8:12,2:7,14:15)]
+
+genomicStats[is.na(genomicStats$iSNVs), "iSNVs"] <- 0
+genomicStats[is.na(genomicStats$SNVs), "SNVs"] <- 0
+genomicStats  <-  genomicStats %>% mutate(TotalAlleles = iSNVs + SNVs)
+# write_xlsx(genomicStats, "Supp_table2_genomic_stats.xlsx")
+
+## Genome stats purged
+genomicStats_purged <- genomicStats[genomicStats$genomecov >= 90, ] #2 samples dropped with coverage less than 90
+#genomicStats_purged <- genomicStats_purged[genomicStats_purged$DepthCov10PercGT80 == 1, ]
+# write.table(genomicStats_purged, "Supp_table2_genomicStats_ch1_ch3.tsv", sep = "\t", col.names = T, row.names = F, quote = F)
+write_xlsx(genomicStats_purged, "Supp_table2_genomicStats_CH1_CH3.xlsx")
+
+### Exploratory Plots and Stats
+
+hist(genomicStats_purged$nreads)
+range(genomicStats_purged$nreads) #37035 2529805
+summary(genomicStats_purged$nreads) #median - 252919
+
+summary(genomicStats_purged$average_depth)
+summary(genomicStats_purged$genomecov)
+
+table(genomicStats_purged$PositionsCovGT50)
+table(genomicStats_purged$PositionsCovGT100)
+
+genomicStats_purged %>% group_by(outbreak) %>% summarise(isnv_count = sum(iSNVs), snv_count = sum(SNVs), totalAllele_count = sum(TotalAlleles))
+
+
+```
+
+### Classify samples by outbreak they belong to
+
+```{r}
+## Purge fastq list
+sample_ids_purged <- sample_ids[sample_ids$sampleName %in% genomicStats_purged$sampleName, ]
+
+## Filter samples not in CH1 and CH3 
+df_snvs_isnvs_ <- rbind(df_isnvs, df_snvs)
+df_snvs_isnvs_purged <- df_snvs_isnvs_ %>% filter(Sample %in% sample_ids_purged$seqIds)
+#dim(df_snvs_isnvs_purged)
+
+## tidy metadata
+samples.metadata$name <- gsub("KRISP-K","K", samples.metadata$name)
+samples.metadata$name <- gsub("KRISP-","KPCOVID_", samples.metadata$name)
+
+samples.metadata[samples.metadata$name == "KPCOVID_0035", "outbreak_id"] <- "R1A"
+samples.metadata[samples.metadata$name == "KPCOVID_0041", "outbreak_id"] <- "R1B"
+
+##purge
+samples_metadata_purged <- samples.metadata[samples.metadata$name %in% sample_ids_purged$sampleName, ]
+write_xlsx(samples_metadata_purged, "data/CH1_CH3_metadata_final.xlsx")
+
+df_snvs_isnvs_purged <- df_snvs_isnvs_purged %>% left_join(sample_ids_purged[, c("seqIds","outbreak")], by = c("Sample" = "seqIds"))
+df_snvs_isnvs_purged <- df_snvs_isnvs_purged %>%  mutate(Mutation = gsub("T", "U", paste0(REF, POS, ALT)),
+                                                         Change = gsub("T", "U", paste0(REF,">" ,ALT)),
+                                                         AF = as.numeric(AF),
+                                                         Polymorphism = ifelse(AF <= 0.5, "iSNV", "SNV"),
+                                                         outb_p = paste0(outbreak,"_", Polymorphism))
+
+
+samples_metadata_purged  <-  inner_join(samples_metadata_purged, sample_ids_purged[, c("seqIds","sampleName")], by = c("name" = "sampleName"))
+samples_metadata_purged$name <- gsub("_","-", samples.metadata$name)
+df_snvs_isnvs_purged <- left_join(df_snvs_isnvs_purged, samples_metadata_purged[, c("seqIds", "name", "outbreak_id")], 
+                                  by = c("Sample" = "seqIds"))
+write_xlsx(samples_metadata_purged, "samples_metadata_purged.xlsx")
+write_xlsx(df_snvs_isnvs_purged, "Supp_table3_ch1_ch3_raw_variants_100.xlsx")
+
+## Split to smaller pieces
+
+## iSNVs occuring in more than 2 samples
+df_isnvs_purged <- df_snvs_isnvs_purged %>% filter(AF <= 0.5) ##2552
+dim(df_isnvs_purged)
+length(unique(df_isnvs_purged$Mutation)) #1336 unique iSNVs
+
+df_snvs_purged <- df_snvs_isnvs_purged %>% filter(AF > 0.5) ##940
+
+#df_isnvs_common <- df_isnvs_purged %>% count(mutation) %>% filter( n > 1)
+#df_snvs_common <- df_snvs_purged %>% count(mutation) %>% filter( n > 1)
+
+#write_xlsx(count(df_isnvs_purged, Mutation, Protein, name = "Freq",sort = T), "Mutation_prevalence_in_proteins_isnvs.xlsx")
+#write_xlsx(count(df_snvs_purged,Mutation, Protein, name = "Freq",sort = T), "Mutation_prevalence_in_proteins_snvs.xlsx")
+#write_xlsx(count(df_snvs_isnvs_purged, `Biological Effect Cat`,outb_p,  name = "Count",sort = T), "All_isnvs_bio_effect_cat.xlsx")
+
+
+df_isnvs_ch1 <-  df_snvs_isnvs_purged %>% filter(Polymorphism == "iSNV" & outbreak == "CH1")
+#write_xlsx(count(df_isnvs_ch1, `Biological Effect Cat`, name = "Count",sort = T), "ch1_isnvs_bio_effect_cat.xlsx")
+#write_xlsx(count(df_snvs_purged,Mutation, Protein, name = "Freq",sort = T), "Mutation_prevalence_in_proteins_snvs.xlsx")
+
+df_isnvs_ch3 <- df_snvs_isnvs_purged %>% filter(Polymorphism == "iSNV" & outbreak == "CH3")
+#write_xlsx(count(df_isnvs_ch3, `Biological Effect Cat`, name = "Count",sort = T), "ch3_isnvs_bio_effect_cat.xlsx")
+#write_xlsx(count(df_snvs_purged,Mutation, Protein, name = "Freq",sort = T), "Mutation_prevalence_in_proteins_snvs.xlsx")
+
+
+df_snvs_ch1 <- df_snvs_isnvs_purged %>% filter(Polymorphism == "SNV" & outbreak == "CH1")
+write_xlsx(count(df_snvs_ch1, `Biological Effect Cat`, name = "Count",sort = T), "ch1_snvs_bio_effect_cat.xlsx")
+#write_xlsx(count(df_snvs_purged,Mutation, Protein, name = "Freq",sort = T), "Mutation_prevalence_in_proteins_snvs.xlsx")
+
+df_snvs_ch3 <- df_snvs_isnvs_purged %>% filter(Polymorphism == "SNV" & outbreak == "CH3")
+write_xlsx(count(df_snvs_ch3, `Biological Effect Cat`, name = "Count",sort = T), "ch3_snvs_bio_effect_cat.xlsx")
+#write_xlsx(count(df_snvs_purged,Mutation, Protein, name = "Freq",sort = T), "Mutation_prevalence_in_proteins_snvs.xlsx")
+
+
+### Mutational Summaries
+dim(df_isnvs_purged)
+length(unique(df_isnvs_purged$Mutation))
+
+## ref vs alt isnvs
+df_isnvs_purged_type <- df_isnvs_purged
+df_isnvs_purged_type <- df_isnvs_purged_type %>% mutate(AlleleType = ifelse(ALT == REF, "REF", "ALT"))
+table(df_isnvs_purged_type$AlleleType)
+
+## i(SNVs) by type and outbreak
+table(df_isnvs_purged$`Biological Effect Cat`, df_isnvs_purged$outbreak)
+
+## iSNV nucleotide changes
+NucleotideChanges <- data.frame(table(df_isnvs_purged_type$Change))
+table(df_isnvs_purged_type$Change, df_isnvs_purged_type$outbreak)
+
+### SNV nucleotide changes
+dim(df_snvs_purged)
+table(df_snvs_purged$Change, df_snvs_purged$outbreak)
+
+### nucleotide changes in proteins
+nucleotide_changes_in_proteins <- df_snvs_isnvs_purged %>% count(Protein, Change)
+
+
+
+### distribution of variants accross the genome
+length(unique(df_snvs_isnvs_purged$POS))
+
+length(unique(df_snvs_isnvs_purged$POS))/29903
+
+variants_dist_locn <- df_snvs_isnvs_purged %>% distinct(POS, Polymorphism) %>% 
+  select(POS, Polymorphism) %>% 
+  spread(key = Polymorphism, -POS)
+
+variants_dist_locn_isnvs <- variants_dist_locn %>% filter(!is.na(iSNV) & is.na(SNV))
+dim(variants_dist_locn_isnvs)
+
+### Changes accross outbreaks
+length(df_isnvs_ch1$Mutation) #3601
+length(unique(df_isnvs_ch1$Mutation)) #2197
+
+length(df_snvs_ch1$Mutation) #288
+length(unique(df_snvs_ch1$Mutation)) #85
+
+length(df_isnvs_ch3$Mutation) #2126
+length(unique(df_isnvs_ch3$Mutation)) #1612
+
+length(df_snvs_ch3$Mutation) #779
+length(unique(df_snvs_ch3$Mutation)) #200
+
+data.frame(outbreak = c("CH1", "CH1", "CH3", "CH3"),
+           "mutation_category" = c("iSNV", "SNV", "iSNV", "SNV"),
+           total = c(length(df_isnvs_ch1$Mutation), length(df_snvs_ch1$Mutation), length(df_isnvs_ch3$Mutation), length(df_snvs_ch3$Mutation)),
+           uniqe = c(length(unique(df_isnvs_ch1$Mutation)), length(unique(df_snvs_ch1$Mutation)), length(unique(df_isnvs_ch3$Mutation)), length(unique(df_snvs_ch3$Mutation)))) %>% 
+            kbl(caption = "Distribution of variants across outbreaks") %>% kable_styling()
+
+## Distribution of isnvs by impact accross outbreaks
+variants_by_bio_effect_cts <- df_isnvs_purged %>% count(outbreak, `Biological Effect Cat`)
+variants_by_bio_effect_cts %>%  spread(key = `Biological Effect Cat`, value = n) %>% 
+  kbl(caption = "Distribution of isnvs by impact accross outbreaks") %>%
+  kable_paper(bootstrap_options = "striped", full_width = F)
+
+## Distribution of snvs by impact accross outbreaks
+variants_by_bio_effect_cts <- df_snvs_purged %>% count(outbreak, `Biological Effect Cat`)
+variants_by_bio_effect_cts %>%  spread(key = `Biological Effect Cat`, value = n) %>% 
+  kbl(caption = "Distribution of snvs by impact accross outbreaks") %>%
+  kable_paper(bootstrap_options = "striped", full_width = F)
+
+## Distribution of isnvs by impact accross outbreaks and genes
+variants_by_bio_effect_cts <- df_isnvs_purged %>% count(GENE, outbreak, `Biological Effect Cat`)
+variants_by_bio_effect_cts %>%  spread(key = `Biological Effect Cat`, value = n) %>% 
+  kbl() %>%
+  kable_paper(bootstrap_options = "striped", full_width = F)
+
+
+## Distribution of isnvs in the proteins
+variants_by_bio_effect_cts <- df_isnvs_purged %>% count(Mutation, Protein)
+variants_by_bio_effect_cts <- variants_by_bio_effect_cts[with(variants_by_bio_effect_cts, order(Protein, n)), ]
+
+## Distribution of snvs in proteins
+variants_by_prot_snvs <- df_snvs_purged %>% count(Mutation, Protein)
+
+# variants_by_bio_effect_cts %>%
+#   kbl(caption = "Distribution of snvs by impact accross outbreaks") %>%
+#   kable_paper(bootstrap_options = "striped", full_width = F)
+
+## ggplot bars
+## https://sebastiansauer.github.io/ordering-bars/
+
+## Distribution of shared variants
+distn_of_variants <- df_isnvs_purged %>% count(Mutation)
+write_xlsx(distn_of_variants, "distribution_of_variants.xlsx")
+#View(distn_of_variants)
+
+ubuiquitous_mutations <- distn_of_variants %>% filter(n >= 10)
+write_xlsx(ubuiquitous_mutations, "Table_S8.xlsx")
+
+## Clade distribution of variants:
+clade_var_dist <- inner_join(samples_metadata_purged[, c("seqIds","GISAID_clade")], df_snvs_isnvs_purged[, c("Sample", "Mutation")], by = c("seqIds"="Sample"))
+tab_clade_var_dist <- data.frame(table(clade_var_dist$Mutation, clade_var_dist$GISAID_clade))
+
+```
+## Effect of Sequencing Depth on Number of Variants identified
+```{r}
+library(cowplot)
+sp <- ggscatter(genomicStats_purged, x = "average_depth", y = "iSNVs",
+   add = "reg.line",  # Add regressin line
+   add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+   conf.int = TRUE # Add confidence interval
+   ) + 
+  xlab("") +
+  ylab("") +
+  theme(axis.title.x = element_text(color="black", size=15),
+        axis.text.x = element_text(color="black", size=15),
+        axis.title.y = element_text(color="black", size=15),
+        axis.text.y = element_text(color="black", size=15))+
+  xlab("Average Depth") +
+  ylab("Number of iSNVs") +
+  stat_cor(method = "pearson")  
+
+
+sp1 <- ggscatter(genomicStats_purged, x = "PercGenCovGT50", y = "iSNVs",
+   add = "reg.line",  # Add regressin line
+   add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+   conf.int = TRUE # Add confidence interval
+   ) + 
+  xlab("") +
+  ylab("") +
+  theme(axis.title.x = element_text(color="black", size=15),
+        axis.text.x = element_text(color="black", size=15),
+        axis.title.y = element_text(color="black", size=15),
+        axis.text.y = element_text(color="black", size=15))+
+  xlab("Propn of Genome Covered by > 50-fold") +
+  #ylab("Number of iSNVs") + 
+  stat_cor(method = "pearson") 
+
+sp2 <- ggscatter(genomicStats_purged, x = "PercGenCovGT100", y = "iSNVs",
+   add = "reg.line",  # Add regressin line
+   add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+   conf.int = TRUE # Add confidence interval
+   )+ 
+  xlab("") +
+  ylab("") +
+  theme(axis.title.x = element_text(color="black", size=15),
+        axis.text.x = element_text(color="black", size=15),
+        axis.title.y = element_text(color="black", size=15),
+        axis.text.y = element_text(color="black", size=15))+
+  xlab("Propn of Genome Covered by > 100-fold") +
+  #ylab("Number of iSNVs") + 
+  stat_cor(method = "pearson") 
+
+plot_grid(sp, sp1, sp2, ncol = 3, labels = c(LETTERS[1:3]), align = "h", label_size = 18)
+
+```
+
+### Shared Alleles between SNV and Consensus
+
+```{r upset-plot}
+
+## upset plot showing shared mutations
+
+mutations <- unique(df_snvs_isnvs_purged$Mutation)
+outbreak_grp <- unique(df_snvs_isnvs_purged$outb_p)
+
+set_data <- matrix(data = FALSE, nrow = length(mutations), ncol = (length(outbreak_grp)+1))
+colnames(set_data) <- c("Mutations", outbreak_grp)
+set_data[,1] <- mutations
+
+for(i in 1:nrow(set_data)){
+  aux <- df_snvs_isnvs_purged$outb_p[which(df_snvs_isnvs_purged$Mutation == set_data[i,1])]
+  set_data[i, aux] <- TRUE
+}
+
+set_data <- as.data.frame(set_data, stringsAsFactors = FALSE)
+upset(set_data, outbreak_grp, name='iSNVs Categories Across Outbreaks', 
+      sort_intersections_by = "cardinality",
+      stripes=c('cornsilk1', '#99ccff'),
+      themes=upset_default_themes(panel.grid.major.x = element_blank(),
+                                panel.grid.minor = element_blank(),
+                                axis.text=element_text(size=11)
+                                ))
+##336699
+
+
+### Distribution of variants accross the genome
+##View(df_snvs_isnvs_purged)
+
+```
+```{r, tempest}
+
+CH1_tempest_data <- read_delim("data/CH1_tempest.data.csv", "\t", escape_double = FALSE, trim_ws = TRUE)
+ggscatter(CH1_tempest_data, x = "distance", y = "residual",
+                 add = "reg.line",  # Add regressin line
+                 add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+                 conf.int = TRUE # Add confidence interval
+  )+ xlab("Distance") +
+  ylab("Residual") + 
+  #facet_grid(cols = vars(Sample)) +
+  stat_cor(method = "pearson") + 
+  theme_bw()+
+  theme(axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=12),
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 12))
+
+
+
+CH3_tempest_data <- read_delim("data/CH3_tempest.data.csv", "\t", escape_double = FALSE, trim_ws = TRUE)
+ggscatter(CH3_tempest_data, x = "distance", y = "residual",
+                 add = "reg.line",  # Add regressin line
+                 add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+                 conf.int = TRUE # Add confidence interval
+  )+ xlab("Distance") +
+  ylab("Residual") + 
+  #facet_grid(cols = vars(Sample)) +
+  stat_cor(method = "pearson") + 
+  theme_bw()+
+  theme(axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=12),
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 12))
+
+
+
+```
+
+
+
+
+## Dynamics of low-frequency and fixed
+```{r}
+
+# variantsLong <- genomicStats_purged %>% 
+#                     select("iSNVs", "SNVs") %>% 
+#                     pivot_longer(c("iSNVs", "SNVs"), names_to = "Polymorphisms", values_to = "Counts")
+# 
+# ggplot(variantsLong,  aes(x="Polymorphisms", y="Counts", fill="Polymorphisms")) +
+#     geom_violin() +
+#     geom_boxplot( color="grey", alpha=0.2) +
+#     scale_fill_viridis(discrete = TRUE) +
+#     theme_ipsum() +
+#     theme(
+#       legend.position="none",
+#       plot.title = element_text(size=11)
+#     ) +
+#     ggtitle("A Violin wrapping a boxplot") +
+#     xlab("")
+
+
+## in how many samples does a mutation occur
+variant_freqs_by_sample <- df_snvs_isnvs_purged %>% 
+                                select(Sample, Polymorphism, Mutation, outbreak) %>% 
+                                group_by(Polymorphism, Mutation, outbreak) %>% 
+                                  summarise(n_Sample = n())
+
+
+variant_freqs_by_sample$POS  <-  as.numeric(numextract(variant_freqs_by_sample$Mutation))
+variant_freqs_by_sample <- variant_freqs_by_sample %>% mutate(
+     samplePerc = round((n_Sample/109) * 100, 0)
+)
+
+variant_freqs_by_sample$Polymorphism <- 
+  factor(variant_freqs_by_sample$Polymorphism, levels = c("iSNV", "SNV"), labels = c("3% <= Freq <= 50%", "Freq. >= 50%"))
+
+#variant_freqs_by_sample$p <- ifelse(count(variant_freqs_by_sample$Mutation) > 1, 1, 0)
+
+#totals <- as.vector(by(variant_freqs_by_sample$samplePerc, variant_freqs_by_sample$Mutation, sum))
+#pos <- rep(totals + 1, each=3)
+
+plt_allele_distn <- ggplot(variant_freqs_by_sample, aes(x = POS/1000, y = samplePerc)) +
+                          geom_bar(stat="identity", width=0.07, aes(fill = Polymorphism)) +
+                          xlab("Nucleotide Position (kb)")+
+                          ylab("Samples Sharing Mutation Position (%)")+
+                          scale_y_continuous(limits = c(0,100),breaks = seq(0, 100, by = 20))+
+                          scale_x_continuous(limits = c(0,30),breaks = seq(0, 30, by = 5))+
+                          geom_hline(yintercept=50, color = "gray75", alpha=0.5)+
+                          geom_hline(yintercept=10, color = "gray75", alpha=0.5)+
+                          scale_fill_manual(values = c("#D4AF37", "#4169E1")) +
+                          facet_grid(rows = vars(outbreak))+
+                          #geom_text(aes(label=ifelse((samplePerc >= 10 ), Mutation, "")), vjust=-0.3, size=3.5)+
+                          theme_minimal() +
+                          theme(panel.grid.major = element_blank(),
+                                panel.grid.minor = element_blank(),
+                                axis.title.x = element_text(size=15),
+                                axis.title.y = element_text(size=15),
+                                axis.text=element_text(size=10),
+                                axis.line.x = element_line(colour = "black", size = 0.5),
+                                legend.position = "top")
+plt_allele_distn
+
+
+
+## Variant stats:
+# Unique positions
+message("Unique Positions with variants: ", length(unique(df_snvs_isnvs_purged$POS)))
+
+mutation_set_data <- set_data
+mutation_set_data$POS  <-  as.numeric(numextract(mutation_set_data$Mutations))
+mutation_set_data_isnvs <- mutation_set_data %>% filter(CH1_SNV == "FALSE" & CH3_SNV == "FALSE")
+message("Unique Positions with only iSNVs: ", length(unique(mutation_set_data_isnvs$POS)))
+
+```
+
+
+
+
+### Pairwise SNP Distance
+
+```{r}
+
+CH1_CH3_purged_snpdists_molten <- read_delim("~/temp/Collaborations/covid/whd/snp_dists/CH1_CH3_purged_snpdists_molten.tsv", 
+    "\t", escape_double = FALSE, col_names = FALSE, 
+    trim_ws = TRUE)
+colnames(CH1_CH3_purged_snpdists_molten) <- c("genome1", "genome2", "snpdist")
+
+##View(CH1_CH3_purged_snpdists_molten)
+
+CH1_CH3_purged_snpdists_molten$genome1 <- sapply(str_split(CH1_CH3_purged_snpdists_molten$genome1, "/", n = 2, simplify = FALSE), `[`, 2)
+CH1_CH3_purged_snpdists_molten$genome1 <- gsub("/2020","", CH1_CH3_purged_snpdists_molten$genome1)
+
+CH1_CH3_purged_snpdists_molten$genome2 <- sapply(str_split(CH1_CH3_purged_snpdists_molten$genome2, "/", n = 2, simplify = FALSE), `[`, 2)
+CH1_CH3_purged_snpdists_molten$genome2 <- gsub("/2020","", CH1_CH3_purged_snpdists_molten$genome2)
+
+
+CH1_Epi_Ids <- read_csv("~/temp/Collaborations/covid/whd/ch1_ch3/100/CH1_Epi_Ids.txt", 
+    col_names = FALSE)
+CH1_Epi_Ids_collapse <- paste0(CH1_Epi_Ids$X1, collapse = "|")
+CH1_purged_snpdists <- CH1_CH3_purged_snpdists_molten[grepl(CH1_Epi_Ids_collapse, CH1_CH3_purged_snpdists_molten$genome1), ]
+CH1_purged_snpdists <- CH1_purged_snpdists[grepl(CH1_Epi_Ids_collapse, CH1_purged_snpdists$genome2), ]
+
+minus_ <- paste0(c("KRISP-0065","KRISP-0065", "KRISP-0074", "CH3"), collapse = "|")
+CH1_purged_snpdists <- CH1_purged_snpdists[!grepl(minus_, CH1_purged_snpdists$genome1), ]
+CH1_purged_snpdists <- CH1_purged_snpdists[!grepl(minus_, CH1_purged_snpdists$genome2), ]
+
+```
+
+
+## Diversity Analyses
+
+
+```{r child='diversity-analysis.Rmd'}
+## include diversity analysis
+```
+

@@ -1,0 +1,4 @@
+"0","variants_by_bio_effect_cts <- df_isnvs_purged %>% count(GENE, `Biological Effect Cat`)"
+"0","variants_by_bio_effect_cts %>%  spread(key = `Biological Effect Cat`, value = n) %>% "
+"0","  kbl(caption = ""Distribution of isnvs by impact accross outbreaks"") %>%"
+"0","  kable_paper(bootstrap_options = ""striped"", full_width = F)"

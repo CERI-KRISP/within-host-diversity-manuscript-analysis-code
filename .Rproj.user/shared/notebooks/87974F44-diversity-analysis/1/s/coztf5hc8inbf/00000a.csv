@@ -1,0 +1,2 @@
+"0","df_changes_wide <- df_changes[, -4] %>% spread(outb_p, n)"
+"0","cbind(df_changes_wide, Total = rowSums(df_changes_wide[, -1]))"

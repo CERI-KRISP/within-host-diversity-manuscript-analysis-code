@@ -1,0 +1,3 @@
+"0","variants_by_gene_impact_cts <- variants_ %>% count(GENE, IMPACT)"
+"0","variants_by_gene_impact_cts %>%  kbl() %>%"
+"0","  kable_paper(bootstrap_options = ""striped"", full_width = F)"

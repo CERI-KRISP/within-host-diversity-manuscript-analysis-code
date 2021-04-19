@@ -1,0 +1,1235 @@
+### Add length information
+
+```{r}
+
+## gene length
+## Get gene lengths
+annot <- read_csv("~/temp/Collaborations/covid/whd/SARS-CoV-2/genomics/4-Variation/annot.txt", 
+                  col_types = cols(X1 = col_skip()))
+head(annot)
+gene_lengths <- annot %>% 
+  select(gene, L) %>% 
+  filter(!gene == ".") %>% 
+  group_by(gene) %>% 
+  summarise(Length = sum(L))
+gene_lengths[gene_lengths$gene == "orf1ab", "gene"] <- "ORF1ab"
+
+## (i)SNVs by type
+table(df_snvs_isnvs_purged$`Biological Effect Cat`)
+
+variants_ <- df_snvs_isnvs_purged %>% 
+  filter(!`Biological Effect Cat` == "Wild Type") %>% 
+  select(Sample, GENE, Mutation,`Biological Effect Cat`, IMPACT, Protein, Polymorphism, outbreak) %>% 
+  distinct()
+ 
+summray_changes <- df_snvs_isnvs_purged %>%  count(Change, Protein, Polymorphism)
+write_xlsx(summray_changes, "summary_changes.xlsx")
+
+variants_by_gene_cts <- variants_ %>% count(GENE)
+variants_by_gene_cts %>%  kbl() %>%
+  kable_paper(bootstrap_options = "striped", full_width = F)
+
+## barplot - GENE
+ggplot(variants_by_gene_cts, aes(x = GENE, y = n)) + 
+  geom_bar(stat = "identity",  width = 0.4, aes(fill = GENE))+
+  theme_minimal() +
+  geom_text(aes(label=n), vjust=-0.3, size=3.5)+
+  ylab("Mutation Counts") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=15),
+        legend.position = "none")
+
+variants_by_gene_outbreak_cts <- variants_ %>% count(GENE, outbreak)
+ggplot(variants_by_gene_outbreak_cts, aes(x = GENE, y = n)) + 
+  geom_bar(stat = "identity",  width = 0.4, aes(fill = outbreak))+
+  scale_fill_manual("Outbreak", values = c("#fcc004", "#ac0454"))+
+  theme_minimal() +
+  #geom_text(aes(label=n), vjust=-0.3, size=3.5)+
+  ylab("Mutation Counts") +
+theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=15),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1) )
+
+## barplot - Protein
+variants_by_Protein_cts <- variants_ %>% count(Protein)
+ggplot(variants_by_Protein_cts, aes(x = Protein, y = n)) + 
+  geom_bar(stat = "identity",  width = 0.4, aes(fill = Protein))+
+  theme_minimal() +
+  geom_text(aes(label=n), vjust=-0.3, size=3.5)+
+  ylab("Mutation Counts") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=15),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        legend.position = "none")
+
+## Similar mutation patterns
+variants_by_Protein_cts_pol <- variants_ %>% count(Protein, Polymorphism)
+ggplot(variants_by_Protein_cts_pol, aes(x = Protein, y = n)) + 
+  geom_bar(stat = "identity",  width = 0.4, aes(fill = Polymorphism))+
+  scale_fill_manual(values = c("#FFCC66", "#66CCFF"))+
+  theme_minimal() +
+  #geom_text(aes(label=n), vjust=-0.3, size=3.5)+
+  ylab("Mutation Counts") +
+theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=15),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1) )
+
+
+variants_by_bio_effect_cts <- df_isnvs_purged %>% count(GENE, `Biological Effect Cat`)
+variants_by_bio_effect_cts %>%  spread(key = `Biological Effect Cat`, value = n) %>% 
+  kbl(caption = "Distribution of isnvs by impact accross outbreaks") %>%
+  kable_paper(bootstrap_options = "striped", full_width = F)
+
+## barplot 7X4
+ggplot(variants_by_bio_effect_cts, aes(x = GENE, y = n, fill = `Biological Effect Cat`)) + 
+  geom_bar(stat = "identity",  width = 0.4)+
+  theme_minimal() +
+  scale_fill_manual(name = "TYPE", values = c("#ff3300", "#ff9900", "#6699CC", "#7CAE00"))+
+  ylab("Mutation Counts") +
+  labs(fill = "Biological Significance") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=15))
+
+variants_by_gene_impact_cts <- variants_ %>% count(GENE, IMPACT)
+
+variants_by_gene_impact_cts %>%  kbl() %>%
+  kable_paper(bootstrap_options = "striped", full_width = F)
+
+ggplot(variants_by_gene_impact_cts, aes(x = GENE, y = n, fill = IMPACT)) + 
+  geom_bar(stat = "identity",  width = 0.4)+
+  theme_minimal() +
+  scale_fill_manual(name = "IMPACT", breaks = VarImpact, values = impactPalleteNamed)+
+  ylab("Mutation Counts") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=15))
+
+
+variants_by_gene_impact <- variants_ %>% count(IMPACT)
+variants_by_gene_impact %>%  kbl() %>%
+  kable_paper(bootstrap_options = "striped", full_width = F)
+
+variants_by_gene_impact_cts_spread <- variants_by_gene_impact_cts %>% spread(key = IMPACT, value = n)
+variants_by_gene_impact_cts_spread$TOTAL <- rowSums(variants_by_gene_impact_cts_spread[,c(2:4)], na.rm = T)
+variants_by_gene_impact_cts_spread <- inner_join(variants_by_gene_impact_cts_spread, gene_lengths, by = c("GENE"="gene"))
+variants_by_gene_impact_cts_spread <- variants_by_gene_impact_cts_spread %>% mutate("Total, N (v/kbgl)" = paste0(TOTAL, " (", round((TOTAL/Length)*1000,2), ")"))
+variants_by_gene_impact_cts_spread <- variants_by_gene_impact_cts_spread[, c(1,6, 2:4,7)]
+
+
+table(variants_$GENE, variants_$Polymorphism)
+variants_by_gene_impact_cts_spread %>% kbl() %>% kable_styling()
+
+write_xlsx(variants_by_gene_impact_cts_spread, "ORF_summary.xlsx")
+
+# ggplot(variants_by_gene_effect_cts_spread_sum[, -5], aes(x = GENE, y = "Total, N (v/kbgl)")) + 
+#   geom_bar(stat = "identity",  width = 0.4, aes(fill= GENE))+
+#   theme_minimal() +
+#   geom_text(aes(label=round(norm, 0)), vjust=-0.3, size=3.5)+
+#   ylab("Normalized Mutation Counts (v/kbgl)") +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+#         legend.position = "none")
+
+ write_xlsx(count(df_snvs_isnvs_purged,Mutation, Protein, name = "Freq",sort = T), "Mutation_prevalence_in_proteins.xlsx")
+
+```
+
+### Nucleotide changes
+```{r}
+
+## Nucleotide changes with frequencies
+ggplot(df_snvs_isnvs_purged, aes(x = Change, y = AF)) + 
+  geom_jitter(aes(colour = Change), size = 0.4)+
+  scale_y_continuous(limits = c(0.00,1.00), breaks = seq(0.00, 1.00, by = 0.05))+
+  ylab("SNV frequency (%)")+
+  xlab("Nucleotide Change")+
+  theme_classic() +
+                          theme(panel.grid.major = element_blank(),
+                                panel.grid.minor = element_blank(),
+                                axis.title.x = element_text(size=15),
+                                axis.title.y = element_text(size=15),
+                                axis.text=element_text(size=10),
+                                axis.line.x = element_line(colour = "black", size = 0.5),
+                                legend.position="none")
+
+## Change counts
+df_changes_all <- df_snvs_isnvs_purged %>% count(Change)
+ggplot(df_changes_all, aes(x = Change, y = n)) + 
+  geom_bar(aes(fill = Change), stat = "identity")+
+  ylab("SNV Count")+
+  xlab("Nucleotide Change")+
+  scale_y_continuous(limits = c(00,950), breaks = seq(0, 1000, by = 200))+
+  theme_classic() +
+                          theme(panel.grid.major = element_blank(),
+                                panel.grid.minor = element_blank(),
+                                axis.title.x = element_text(size=15),
+                                axis.title.y = element_text(size=15),
+                                axis.text=element_text(size=10),
+                                axis.line.x = element_line(colour = "black", size = 0.5),
+                                legend.position="none")
+
+
+## Counts by outbreak group
+df_changes <- df_snvs_isnvs_purged %>% count(Change, outb_p)
+df_changes$frac <- df_changes$n/sum(df_changes$n)
+ggplot(df_changes, aes(x = Change, y = frac, fill = outb_p)) + 
+  geom_bar(stat = "identity", position = position_dodge(0.7), width=.7)+
+  theme_classic() +
+  ylab("Proportion")+
+  xlab("Nucleotide Change")+
+  scale_fill_manual(name = "SNV Category", breaks =  mutation_cats, values = OutbreakPalleteNamed)+
+  coord_fixed(ratio = 50)+
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=10),
+        axis.line.x = element_line(colour = "black", size = 0.5))
+
+ggplot(df_changes, aes(x = Change, y = n, fill = outb_p)) + 
+  geom_bar(stat = "identity", position = position_dodge(0.7), width=.7)+
+  theme_classic() +
+  scale_fill_manual(name = "SNV Category", breaks =  mutation_cats, values = OutbreakPalleteNamed)+
+  ylab("Mutation Count")+
+  xlab("Nucleotide Change")+
+  coord_fixed(ratio = 1/80)+
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=12),
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 12),
+        legend.position = "top",
+        axis.line.x = element_line(colour = "black", size = 0.5))
+
+df_changes_wide <- df_changes[, -4] %>% spread(outb_p, n)
+cbind(df_changes_wide, Total = rowSums(df_changes_wide[, -1]))
+write_xlsx(cbind(df_changes_wide, Total = rowSums(df_changes_wide[, -1])), "Nucleotide_change_count.xlsx")
+
+## Counts by - gene
+df_changes_gene <- df_snvs_isnvs_purged %>% count(Change, Polymorphism, GENE,  Protein)
+colnames(df_changes_gene) <- c("Nucleotide Change", "Mutation Type","GENE", "Protein", "Frequency")
+#write_xlsx(df_changes_gene, "Nucleotide_Changes_by_gene.xlsx")
+
+# ch_plot <- ggplot(df_changes_gene, aes(x = `Nucleotide Change`, y = Frequency, fill = `Mutation Type`)) + 
+#   geom_bar(stat = "identity")+
+#   theme_classic() +
+#    facet_grid(~Protein) + 
+  # scale_y_continuous(limits = c(0,150),breaks = seq(0, 150, by = 10))+
+  # #scale_fill_manual(name = "SNV Category", breaks =  mutation_cats, values = OutbreakPalleteNamed)+
+  # ylab("SNV Count")+
+  # xlab("Nucleotide Change")+
+  # #coord_fixed(ratio = 1/300)+
+  # theme(panel.grid.major = element_blank(),
+  #       panel.grid.minor = element_blank(),
+  #       axis.title.x = element_text(size=15),
+  #       axis.title.y = element_text(size=15),
+  #       axis.text=element_text(size=10),
+  #       axis.line = element_blank())
+# ch_plot %>% 
+#   gg.gap::gg.gap(
+#     ylim = c(0, 140), 
+#     segments = list(c(80, 110)),
+#     tick_width = 10,
+#     c(0.7,0,0.3)
+#   )
+
+head(df_changes_gene )
+```
+### Transmission analysis CH1
+
+```{r}
+
+#### St. Augustine Outbreak
+## Create donor recipient pairs
+donor_sample_ids <-     c("KPCOVID-0055", "KPCOVID-0055", "KPCOVID-0055", "KPCOVID-0055", "KPCOVID-0055" ,"KPCOVID-0055","KPCOVID-0055","KPCOVID-0055","KPCOVID-0055","KPCOVID-0055","KPCOVID-0057","KPCOVID-0057", "KPCOVID-0017","KPCOVID-0017","KPCOVID-0017")
+
+donor_outbreak_ids <-   c("P3", "P3", "P3", "P3", "P3", "P3", "P3", "P3", "P3", "P3", "HW4", "HW4", "P7", "P7", "P7")
+recipient_sample_ids <- c("KPCOVID-040-R", "KPCOVID-0057", "KPCOVID-0066", "KPCOVID-91", "KPCOVID-88", "KPCOVID-0016", "KPCOVID-0017", "KPCOVID-81", "KPCOVID-84"  ,"KPCOVID-0112", "KPCOVID-0067", "KPCOVID-0115", "KPCOVID-89" ,"KPCOVID-0021REP", "KPCOVID-0113")
+recipient_outbreak_ids <- c("P10", "HW4", "P13","P21", "P22" ,"P5"          , "P7"         ,"P29"         , "P20"        , "P27"        , "P11"        ,"P15"         , "P23"        , "X1"            , "P26")
+ 
+df_transmission_pairs_ch1 <- data.frame(donor_id = donor_sample_ids, 
+                                        donor_oid = donor_outbreak_ids,
+                                        recipient_id = recipient_sample_ids,
+                                        recipient_oid = recipient_outbreak_ids, stringsAsFactors = F)
+
+
+## All samples with transmission pairs
+st_aug_paired_samples <- c("KPCOVID-0055", "KPCOVID-040-R","KPCOVID-0017", "KPCOVID-0016", "KPCOVID-81", "KPCOVID-84", "KPCOVID-0112", "KPCOVID-0057", "KPCOVID-0066", "KPCOVID-91", "KPCOVID-88", "KPCOVID-0067", "KPCOVID-0115", "KPCOVID-89", "KPCOVID-0021REP", "KPCOVID-0113")
+df_snvs_isnvs_st_aug_paired_samples <- df_snvs_isnvs_purged %>% filter(Sample %in% st_aug_paired_samples)
+
+dim(df_snvs_isnvs_st_aug_paired_samples)
+table(df_snvs_isnvs_st_aug_paired_samples$Polymorphism, df_snvs_isnvs_st_aug_paired_samples$`Biological Effect Cat`) %>% kbl(caption = "Source Recipient Paired Samples from CH1") %>% kable_styling()
+
+## construct distribution table
+df_staug_minor_allele_distn <- data.frame()
+
+for(row in 1:nrow(df_transmission_pairs_ch1)) {
+   donor_id <- as.character(df_transmission_pairs_ch1[row, "donor_id"])
+   donor_oid <- as.character(df_transmission_pairs_ch1[row, "donor_oid"])
+   recipient_id <- as.character(df_transmission_pairs_ch1[row, "recipient_id"])
+   recipient_oid <- as.character(df_transmission_pairs_ch1[row, "recipient_oid"])
+   
+   #message(donor_id, "_",recipient_id ," Transmission Pair")
+   
+   from_to <- paste0(donor_oid,"_" ,recipient_oid)
+   fromToSeq <- paste0(donor_id,"_" ,recipient_id)
+
+   # subset donor and recipient info
+   df_donor_ <- df_isnvs_ch1[df_isnvs_ch1$Sample == donor_id, ]
+   df_recipient_ <- df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample == recipient_id, ]
+
+   ##Get shared minor alleles
+   don_rec_shared <- paste0(intersect(df_donor_$Mutation, df_recipient_$Mutation), collapse="|")
+   don_rec_shared_count <- length(intersect(df_donor_$Mutation, df_recipient_$Mutation))
+   
+
+   ##Get minor alleles unique to donor or reciepient
+   donor_only_isnvs <- paste0(setdiff(df_donor_$Mutation, df_recipient_$Mutation), collapse="|")
+   reciepient_only_isnvs <- paste0(setdiff(df_donor_$Mutation, df_recipient_$Mutation), collapse="|")
+
+   pair_001 <- data.frame(from_to = from_to, fromToSeq = fromToSeq, don_rec_shared = don_rec_shared, don_rec_shared_count = don_rec_shared_count,  donor_only_isnvs =  donor_only_isnvs, reciepient_only_isnvs = reciepient_only_isnvs, stringsAsFactors = F)
+
+   df_staug_minor_allele_distn = rbind(df_staug_minor_allele_distn, pair_001)
+}
+
+df_staug_minor_allele_distn %>%  kbl() %>%
+  kable_styling(bootstrap_options = "striped", font_size = 9) %>% 
+  column_spec(4, width = "30em") %>% 
+  column_spec(5:6, width = "50em")
+
+
+#write_xlsx(staug_minor_allele_distn, "staug_minor_allele_distn_.xlsx")
+
+```
+
+### Plot shared mutations
+
+```{r}
+
+#### Shared mutation plots:
+## K0055,K0040
+
+for(row in 1:nrow(df_transmission_pairs_ch1)) {
+  
+   donor_id <- as.character(df_transmission_pairs_ch1[row, "donor_id"])
+   donor_oid <- as.character(df_transmission_pairs_ch1[row, "donor_oid"])
+   recipient_id <- as.character(df_transmission_pairs_ch1[row, "recipient_id"])
+   recipient_oid <- as.character(df_transmission_pairs_ch1[row, "recipient_oid"])
+   
+   donor_df <- df_isnvs_ch1[df_isnvs_ch1$Sample == donor_id, ]
+   recipient_df <- df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample == recipient_id, ]
+   
+   if(dim(donor_df)[1] != 0 | dim(recipient_df)[1] != 0) {
+     donor_df$role <- "source" 
+     recipient_df$role <- "recipient"
+     df_don_rec <- rbind(donor_df, recipient_df) 
+     df_don_rec$role <- factor(df_don_rec$role, levels = c("source", "recipient"), labels = c(donor_oid, recipient_oid))
+     }
+
+     
+     df_don_rec_shared <- df_don_rec[df_don_rec$Mutation %in% c(intersect(donor_df$Mutation, recipient_df$Mutation)), ]
+     if(dim(df_don_rec_shared)[1] != 0){
+        df_don_rec_shared$AF <- as.numeric(df_don_rec_shared$AF)
+    
+        sPlot <- ggplot(dplyr::arrange(df_don_rec_shared, -AF), aes(x =  Mutation, y = AF, fill = role)) +
+        geom_bar(stat="identity", position=position_dodge()) +
+        scale_fill_manual("", values = c("#cc3333","#3399cc")) +
+        theme_minimal() +
+        xlab("Shared Variant") +
+        ylab("Intrahost Variant Freq.") +
+        theme(axis.text.x = element_text(face="plain", color="#000000", size=12, angle=45, margin = margin(7,0,0,0), hjust = .7),
+              axis.text.y = element_text(face="plain", color="#000000", size=12),
+              panel.grid.major.x = element_blank(),
+              panel.grid.minor = element_blank(),
+              axis.title.x = element_text(size=15),
+              axis.title.y = element_text(size=15),
+              axis.text=element_text(size=11),
+              legend.title=element_text(size=14),
+              legend.position = "top",
+              legend.text=element_text(size=12))
+      print(sPlot)
+  }
+}
+
+
+
+
+```
+### Days between samples - CH1
+```{r}
+##Extract only participating samples
+all_mapped_ch1_outbreak_ids <- unique(c(df_transmission_pairs_ch1$donor_id, df_transmission_pairs_ch1$recipient_id))
+df_dates_pairs_confirmed_ch1 <- samples_metadata_purged  %>% 
+                    filter(seqIds %in% all_mapped_ch1_outbreak_ids) %>% 
+                    select(seqIds, date)
+
+df_days_between_confirm_ch1 <- df_transmission_pairs_ch1
+df_days_between_confirm_ch1 <-  left_join(df_days_between_confirm_ch1, df_dates_pairs_confirmed_ch1, by = c("donor_id" = "seqIds")) 
+colnames(df_days_between_confirm_ch1)[5] <- "donor_date"
+df_days_between_confirm_ch1 <-  left_join(df_days_between_confirm_ch1, df_dates_pairs_confirmed_ch1, by = c("recipient_id" = "seqIds"))
+colnames(df_days_between_confirm_ch1)[6] <- "recipient_date"
+
+df_days_between_confirm_ch1 <- df_days_between_confirm_ch1 %>% mutate(days_ = as.Date(as.character(df_days_between_confirm_ch1$recipient_date), format="%Y-%m-%d")-
+                  as.Date(as.character(df_days_between_confirm_ch1$donor_date), format="%Y-%m-%d"),
+                  pairId = paste0(donor_oid, "_", recipient_oid))
+
+
+### Add days difference to df_staug_minor_allele_distn
+df_staug_minor_allele_distn_ <- inner_join(df_staug_minor_allele_distn, df_days_between_confirm_ch1[, c("days_","pairId")], by = c("from_to" = "pairId"))
+
+
+###
+
+ggscatter(df_staug_minor_allele_distn_, x = "days_", y = "don_rec_shared_count",
+                 add = "reg.line",  # Add regressin line
+                 add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+                 conf.int = TRUE # Add confidence interval
+  )+ xlab("Distance") +
+  ylab("Residual") + 
+  #facet_grid(cols = vars(Sample)) +
+  stat_cor(method = "pearson") + 
+  theme_bw()+
+  theme(axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=12),
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 12))
+
+
+
+```
+
+### SNP distances and L1-Norm Distance including iSNVs
+
+```{r}
+
+possible_pairs.dist_ch1 <- plyr::adply(as_tibble(df_transmission_pairs_ch1), 1, summarize, L1_norm = dist_tp(c(donor_id, recipient_id), snv = df_snvs_isnvs_purged)) # Get the genetic distance between pairs! Takes the longest.
+
+
+## Create pair ids
+possible_pairs.dist_ch1$pairId <- paste0(possible_pairs.dist_ch1$donor_oid, "_", possible_pairs.dist_ch1$recipient_oid)
+
+# Now preprocess and add the snpdistances column to the distance df (create on the index page of readme)
+CH1_purged_snpdists$genome1_shortId <- sapply(str_split(gsub("KZN-ETH/CH1-", "", paste0(CH1_purged_snpdists$genome1)), 
+                                               "/", n = 3, simplify = FALSE), `[`, 2)
+CH1_purged_snpdists$genome2_shortId <- sapply(str_split(gsub("KZN-ETH/CH1-", "", paste0(CH1_purged_snpdists$genome2)), 
+                                               "/", n = 3, simplify = FALSE), `[`, 2)
+CH1_purged_snpdists$pairId <- paste0(CH1_purged_snpdists$genome1_shortId,"_",CH1_purged_snpdists$genome2_shortId)
+
+df_staug_minor_allele_distn__ <- inner_join(df_staug_minor_allele_distn_, CH1_purged_snpdists[, c("pairId","snpdist")], by = c("from_to" = "pairId"))
+df_staug_minor_allele_distn__ <- inner_join(df_staug_minor_allele_distn__, possible_pairs.dist_ch1[, c("pairId","L1_norm")], by = c("from_to" = "pairId"))
+```
+
+
+
+#### Heatmap showing shared mutations between donor/recipient pairs
+
+```{r ch1_heatmap, fig.width = 14, fig.height = 15,  fig.align = "center"}
+### Heatmap
+
+####st_aug pheat
+# create color palet
+col.pal <- brewer.pal(9,"Greens")
+
+## Unique variants shared by at least one pair
+df_staug_minor_allele_distn$don_rec_shared <- as.character(df_staug_minor_allele_distn$don_rec_shared)
+donor_recipient_shared_variants <- c()
+for(row in 1:nrow(df_staug_minor_allele_distn)){
+  aa <- strsplit(df_staug_minor_allele_distn[row, "don_rec_shared"], "[|]")
+  #message(aa)
+  donor_recipient_shared_variants <- c(donor_recipient_shared_variants, aa)
+}
+donor_recipient_shared_variants <- unique(unlist(donor_recipient_shared_variants))
+
+##pairs with common mutations
+df_snvs_isnvs_donor_recipients <- df_snvs_isnvs_purged %>% filter(Sample %in% all_mapped_ch1_outbreak_ids &
+                                                                    Mutation %in% donor_recipient_shared_variants)
+##Annotations
+# Col - start with so I can use it to also order the heatmap cols
+df_snvs_isnvs_donor_recipients_nodups <- df_snvs_isnvs_donor_recipients[, c("POS","Mutation", "Protein", "Biological Effect","IMPACT")]
+df_snvs_isnvs_donor_recipients_nodups[df_snvs_isnvs_donor_recipients_nodups$`Biological Effect` == "missense", "Biological Effect"] <- "non-synonymous"
+df_snvs_isnvs_donor_recipients_nodups <- df_snvs_isnvs_donor_recipients_nodups[!duplicated(df_snvs_isnvs_donor_recipients_nodups),]
+df_snvs_isnvs_donor_recipients_nodups <- df_snvs_isnvs_donor_recipients_nodups[order(df_snvs_isnvs_donor_recipients_nodups$POS), ]
+rownames_mutations <- df_snvs_isnvs_donor_recipients_nodups$Mutation
+df_snvs_isnvs_donor_recipients_nodups[, c("Mutation","POS")] <- list(NULL)
+rownames(df_snvs_isnvs_donor_recipients_nodups) <- rownames_mutations
+df_snvs_isnvs_donor_recipients_nodups <- as.data.frame(df_snvs_isnvs_donor_recipients_nodups)
+
+# row annotation for shared mutations
+hm_st_aug_ids <- c("KPCOVID-0016", "KPCOVID-0017", "KPCOVID-0055", "KPCOVID-0056", "KPCOVID-0057", "KPCOVID-0058", "KPCOVID-0066", "KPCOVID-0067", "KPCOVID-0112", 
+             "KPCOVID-81", "KPCOVID-84", "KPCOVID-91", "KPCOVID-040-R", "KPCOVID-88", "KPCOVID-0115", "KPCOVID-89", "KPCOVID-0021REP", "KPCOVID-0113")
+hm_st_aug_pids <-      c("P5", "P7", "P3", "P14", "HW4", "P12", "P13", "P11", "P27", "P29", "P20", "P21", "P10", "P22", "P15","P23", "X1", "P26")
+st_aug_trans_chains <- c("C1", "C4", "C1", "C5",  "C3",  "C2",  "C1",  "C3",  "C1",  "C1",  "C1",  "C1",  "C1",  "C1",  "C3", "C4",  "C4", "C4")
+
+df_staug_metadata <- data.frame(hm_st_aug_ids = hm_st_aug_ids, hm_st_aug_pids = hm_st_aug_pids, st_aug_trans_chains = st_aug_trans_chains, stringsAsFactors = F)
+df_staug_metadata <- df_staug_metadata %>% filter(hm_st_aug_ids %in% unique(df_snvs_isnvs_donor_recipients$Sample))
+df_staug_metadata <- df_staug_metadata %>% mutate(st_aug_trans_chains = case_when(st_aug_trans_chains == "C1" ~ "P3_Chain",
+                                                                                  st_aug_trans_chains == "C3" ~ "HW4_Chain",
+                                                                                  st_aug_trans_chains == "C4" ~ "P7_Chain"))
+rownames(df_staug_metadata) <- df_staug_metadata$hm_st_aug_ids
+#df_staug_metadata <- df_staug_metadata[rownames(hm_mat_wide), ]
+df_staug_metadata <- df_staug_metadata[order(df_staug_metadata$st_aug_trans_chains), ]
+
+
+## create heatmap main
+hm_mat <- df_snvs_isnvs_donor_recipients[, c("Sample", "AF","Mutation")]
+hm_mat_wide <- data.frame(spread(hm_mat, "Mutation", "AF"), stringsAsFactors = F)
+hm_mat_wide <- hm_mat_wide[, c("Sample",rownames_mutations)]
+hm_mat_wide[,2:ncol(hm_mat_wide)] <- sapply(hm_mat_wide[,2:ncol(hm_mat_wide)],as.numeric)
+hm_mat_wide [is.na(hm_mat_wide)] <- 0
+rownames_ <- hm_mat_wide$Sample 
+hm_mat_wide$Sample <- NULL
+rownames(hm_mat_wide) <- rownames_
+hm_mat_wide <- hm_mat_wide[order(rownames(df_staug_metadata)), ]
+hm_mat_wide <- as.matrix(hm_mat_wide)
+
+
+# Row
+annot_row <- data.frame(Transmission_Chain = df_staug_metadata$st_aug_trans_chains, stringsAsFactors = F)
+colnames(annot_row) <- "TC"
+rownames(annot_row) <- df_staug_metadata$hm_st_aug_pids
+rownames(hm_mat_wide) <- df_staug_metadata$hm_st_aug_pids
+
+annot_colors = list(Protein = orfPallet,
+                    "Mutation Type" = c("synonymous"= "#C77CFF", "non-synonymous"="#7CAE00"),
+                    IMPACT = c("HIGH"="#ff3300", "MODERATE"="#ff9900", "LOW"="#6699CC"))
+
+pheatmap(hm_mat_wide, annotation_col = df_snvs_isnvs_donor_recipients_nodups, 
+         annotation_colors = annot_colors,
+         annotation_row = annot_row, color = col.pal,
+         cellwidth = 12, cellheight = 10, scale = "none",
+         cluster_cols = F, cluster_rows = F) 
+
+
+```
+
+## CH3 Transmission Analysis
+
+### Generate possible transmission pairs
+Get permutations of all the ids and remove the ones that have negative dates between samples
+```{r ch3-transmission-pairs}
+
+## get outbreak ids
+df_ch3_ids <- df_snvs_isnvs_purged %>% filter(outbreak == "CH3") %>% select(Sample, outbreak_id) %>% unique()
+ch3_ids <- df_ch3_ids$Sample #Get vector of CH3 unique ids - 74
+
+## get all possible pairs
+library(gtools)
+df_all_ch3_pairs_ <- data.frame(permutations(n=length(ch3_ids),r=2,v=ch3_ids), stringsAsFactors = F)
+names(df_all_ch3_pairs_) <- c("donor_id", "recipient_id")
+
+
+#all_mapped_ch1_outbreak_ids <- unique(df_all_ch3_pairs$donor)
+df_dates_ch3 <- samples_metadata_purged  %>% 
+                    filter(outbreak == "CH3") %>% 
+                    select(seqIds, outbreak_id, date)
+
+df_days_between_ch3_pairs <- df_all_ch3_pairs_
+
+df_days_between_ch3_pairs <-  left_join(df_days_between_ch3_pairs, df_dates_ch3, by = c("donor_id" = "seqIds")) 
+colnames(df_days_between_ch3_pairs)[c(3:4)] <- c("donor_oid", "donor_date")
+
+df_days_between_ch3_pairs <-  left_join(df_days_between_ch3_pairs, df_dates_ch3, by = c("recipient_id" = "seqIds"))
+colnames(df_days_between_ch3_pairs)[c(5:6)] <- c("recipient_oid", "recipient_date" )
+
+df_all_ch3_pairs <- df_days_between_ch3_pairs %>% mutate(days_between_samples = as.Date(as.character(df_days_between_ch3_pairs$recipient_date), format="%Y-%m-%d")-
+                  as.Date(as.character(df_days_between_ch3_pairs$donor_date), format="%Y-%m-%d"),
+                  pairId = paste0(donor_id, "_", recipient_id),
+                  pairOId = paste0(donor_oid, "_", recipient_oid),
+                  pairOId_HW = gsub("KE", "HW", pairOId)) %>% 
+                      filter(days_between_samples >= 0)
+
+message(nrow(df_all_ch3_pairs), " donor recipient pairs produced for evaluation")
+saveRDS(df_all_ch3_pairs, "CH3_transmission_pairs.RDS")
+### Add days difference to df_staug_minor_allele_distn
+#df_staug_minor_allele_distn_ <- inner_join(df_staug_minor_allele_distn, df_days_between_confirm_ch1[, c("days_","pairId")], by = c("from_to" = "pairId"))
+
+```
+### Get genetic distance between the pairs
+
+```{r genetic-distance}
+
+## Get snp-dist distances for ch3 pairs
+CH3_snpdists <- CH1_CH3_purged_snpdists_molten[grepl("/CH3-", CH1_CH3_purged_snpdists_molten$genome1), ]
+CH3_snpdists <- CH3_snpdists[grepl("/CH3-", CH3_snpdists$genome2), ]
+
+CH3_snpdists_ <- CH3_snpdists %>% mutate(genome1_oid = sapply(str_split(gsub("CH3-", "", genome1), 
+                                               "/", n = 4, simplify = FALSE), `[`, 3),
+                                         genome2_oid = sapply(str_split(gsub("CH3-", "", genome2), 
+                                               "/", n = 4, simplify = FALSE), `[`, 3),
+                                         genome1 = sapply(str_split(genome1, 
+                                               "/", n = 2, simplify = FALSE), `[`, 1),
+                                         genome2 = sapply(str_split(genome2, 
+                                               "/", n = 2, simplify = FALSE), `[`, 1),
+                                         pairId = paste0(genome1 ,"_", genome2),
+                                         pairOId = paste0(genome1_oid, "_", genome2_oid)
+                                         )
+
+## K002457 ? HW78 or HW68 - resolve
+CH3_snpdists_[CH3_snpdists_$genome1 == "HW68", "genome1_oid"] <- "HW78"
+CH3_snpdists_[CH3_snpdists_$genome1 == "HW68", "genome2_oid"] <- "HW78"
+CH3_snpdists_$pairOId <- gsub("HW68", "HW78", CH3_snpdists_$pairOId)
+
+
+
+
+## merge with pairs of interest
+df_all_ch3_pairs_sd <-  left_join(df_all_ch3_pairs, CH3_snpdists_[ ,c("pairOId","snpdist")], by = c("pairOId_HW" = "pairOId"))
+
+```
+
+
+### Now get iSNVs shared between pairs
+
+```{r ch3-isnv-pairs}
+##df of donor recipient pair details
+df_CH3_shared <- data.frame()
+df_CH3_shared_joined <- data.frame()
+
+## get the shared iSNVs. Note that an iSNV could have progressed to SNV in recipient
+for (row in 1:nrow(df_all_ch3_pairs_sd)) {
+   donorId <- df_all_ch3_pairs[row, "donor_id"]
+   recipientId <- df_all_ch3_pairs[row, "recipient_id"]
+
+   #get donor isnvs and recipient (i)snvs
+   theDonor <- df_isnvs_ch3 %>% filter(Sample == donorId)
+   theRecipient <- df_snvs_isnvs_purged %>% filter(Sample == recipientId)
+
+   theDonorOId <- df_snvs_isnvs_purged %>% filter(Sample == donorId) %>% {unique(.$outbreak_id)}
+   theRecipientOId <- unique(theRecipient$outbreak_id)
+
+   ## join the pair
+   pair_001 <- inner_join(theDonor[, c("Sample","POS","REF","ALT", "AF", "Mutation")],
+                        theRecipient[, c("Sample","POS","REF","ALT", "AF", "Mutation")], by = c("Mutation"))
+   if(dim(pair_001)[1] > 0){
+   df_CH3_shared_joined <- rbind(df_CH3_shared_joined, pair_001)
+
+   #shared iSNVs
+   don_rec_shared <- paste0(intersect(theDonor$Mutation, theRecipient$Mutation), collapse="|")
+   don_rec_shared_count <- length(intersect(theDonor$Mutation, theRecipient$Mutation))
+
+   #Only donor isnvs, only recipient (i)snvs
+   don_isnvs <- paste0(setdiff(theDonor$Mutation, theRecipient$Mutation), collapse="|")
+   rec_isnvs <- paste0(setdiff(theRecipient$Mutation, theDonor$Mutation), collapse="|")
+
+   fromTo <- paste0(theDonorOId, "_", theRecipientOId)
+   fromToSeq <- paste0(donorId, "_", recipientId)
+
+   df_0 <- data.frame(fromTo = fromTo, fromToSeq =  fromToSeq, shared_isnv = don_rec_shared, don_rec_shared_count = don_rec_shared_count, uniq_to_don = don_isnvs, uniq_to_rec = rec_isnvs, stringsAsFactors = F)
+
+   df_CH3_shared <- rbind(df_CH3_shared, df_0)
+   }else{
+     don_rec_shared <- ""
+     don_rec_shared_count <- 0
+     don_isnvs <- paste0(setdiff(theDonor$Mutation, theRecipient$Mutation), collapse="|")
+     rec_isnvs <- paste0(setdiff(theRecipient$Mutation, theDonor$Mutation), collapse="|")
+     fromTo <- paste0(theDonorOId, "_", theRecipientOId)
+     fromToSeq <- paste0(donorId, "_", recipientId)
+     df_0 <- data.frame(fromTo = fromTo, fromToSeq =  fromToSeq, shared_isnv = don_rec_shared, don_rec_shared_count = don_rec_shared_count, uniq_to_don = don_isnvs, uniq_to_rec = rec_isnvs, stringsAsFactors = F)
+
+     df_CH3_shared <- rbind(df_CH3_shared, df_0)
+   }
+}
+ 
+write_xlsx(df_CH3_shared_joined, "df_CH3_shared_joined.xlsx")
+write_xlsx(df_CH3_shared, "ch3_shared_isnvs.xlsx")
+
+#df_CH3_shared_joined <- read_xlsx("df_CH3_shared_joined.xlsx") ## Dataframe of only shared positions between pairs
+#df_CH3_shared <- read_xlsx("ch3_shared_isnvs.xlsx") ##
+
+## add shared
+df_all_ch3_pairs_sd_shared <- inner_join(df_all_ch3_pairs_sd, df_CH3_shared, by = c( "pairOId" = "fromTo"))
+
+```
+
+### Create exploratory plots of shared iSNVs
+
+```{r ch3-exploratory-plots}
+#### plots
+
+## plot number of shared mutations by number of mutations
+df_CH3_shared_counts <- df_CH3_shared %>% count(don_rec_shared_count)
+colnames(df_CH3_shared_counts) <- c("don_rec_shared_count", "no_of_pairs")
+
+## Distribution of mutations accross pairs
+# write_xlsx(df_CH3_shared_counts, "df_CH3_shared_counts.xlsx")
+
+df_CH3_shared_counts$don_rec_shared_count <- as.factor(df_CH3_shared_counts$don_rec_shared_count)
+plt_shared_counts <- ggplot(df_CH3_shared_counts, aes(x = don_rec_shared_count, y = no_of_pairs)) + 
+  geom_bar(stat = "identity", fill = "steelblue")+
+  ylab("Number of pairs")+
+  xlab("Number of shared iSNVs")+
+  #scale_x_discrete(limits = c(0, 20), breaks = seq(0, 20, by = 1))+
+  theme_classic() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.line = element_blank(),
+        axis.text.x = element_text(face="plain", color="#000000", size=12, angle = 90, vjust = 0.5, hjust=1),
+        axis.text.y = element_text(face="plain", color="#000000", size=12),
+        legend.position="none")
+## segments comprise stop, start values e.g stop at 100, resume at 120  segments = list(c(100, 120), c(160, 2460)),
+plt_shared_counts  %>%
+  gg.gap::gg.gap(
+    ylim = c(0, 2480),
+    segments = list(c(160, 2460)),
+    tick_width = 20,
+    rel_heights=c(0.7,0,0.1)  )
+
+
+### shared positions
+ch3_shared_positions <- df_CH3_shared_joined %>% count(POS.x) %>% filter(n > 5)
+colnames(ch3_shared_positions) <- c("Position", "No of Pairs")
+ch3_shared_positions <- ch3_shared_positions %>% mutate(Position = as.factor(Position))
+
+plt_shared_pos_counts <- ggplot(ch3_shared_positions, aes(x = Position, y = `No of Pairs`)) + 
+  geom_bar(stat = "identity", fill = "#faab19")+
+  ylab("Number of Sample Pairs")+
+  xlab("iSNV Positions Shared by >=5 Samples")+
+  #scale_x_discrete(limits = c(0, 20), breaks = seq(0, 20, by = 1))+
+  theme_classic() + 
+  scale_y_continuous(expand = c(0, 0)) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        #axis.line = element_blank(),
+        axis.text.x = element_text(face="plain", color="#000000", size=12, angle = 90, vjust = 0.5, hjust=1),
+        axis.text.y = element_text(face="plain", color="#000000", size=12),
+        legend.position="none")
+plt_shared_pos_counts
+# plt_shared_pos_counts  %>% 
+#   gg.gap::gg.gap(
+#     ylim = c(0, 420),
+#     segments = list(c(280, 400)),
+#     tick_width = 20,
+#     c(0.7,0,0.3))
+
+## Positions in the genome where shared variants are occurring in CH3
+# write_xlsx((df_CH3_shared_joined %>% count(POS.x)), "ch3_shared_positions.xlsx")
+
+
+## plot some pairs
+df_K002188_K002208 <- df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample %in% c("K002188","K002208"), ]
+df_K002188_K002208_i <- intersect(df_isnvs_ch3[df_isnvs_ch3$Sample == "K002188", "Mutation"],
+                                  df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample == "K002208", "Mutation"])
+df_K002188_K002208_shared <- df_K002188_K002208[df_K002188_K002208$Mutation %in% df_K002188_K002208_i, ]
+sPlot_ch3 <- ggplot(dplyr::arrange(df_K002188_K002208_shared, -AF), aes(x =  Mutation, y = AF, fill = Sample)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  #geom_text(aes(label=Freq), vjust=1.6, color="white", position = position_dodge(0.9), size=3.5) +
+  ggtitle(paste0("Intrahost Variant Frequencies Between Donor(P7) and Recipient(X1)")) +
+  scale_fill_manual("Allele Frequencies", labels = c("Donor", "Recipient"), values = c("#cc3333","#3399cc")) +
+  theme_minimal() +
+  xlab("Shared Variant") +
+  ylab("Intrahost Variant Freq.") +
+  theme(axis.text.x = element_text(face="plain", 
+                                   color="#000000", 
+                                   size=8, angle=45, 
+                                   margin = margin(0,0,0,0)))
+sPlot_ch3
+
+## K002197_K002208
+df_K002197_K002208 <- df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample %in% c("K002197","K002208"), ]
+df_K002197_K002208_i <- intersect(df_isnvs_ch3[df_isnvs_ch3$Sample == "K002197", "Mutation"],
+                                  df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample == "K002208", "Mutation"])
+df_K002197_K002208_shared <- df_K002197_K002208[df_K002197_K002208$Mutation %in% df_K002197_K002208_i, ]
+```
+
+
+### Compute L1-Norm distance between pairs
+
+Integrate minor variants in genetic distance calculation
+
+```{r l1-norm-distance}
+
+df_all_ch3_pairs_sd_shared_l1_norm <- plyr::adply(as_tibble(df_all_ch3_pairs_sd_shared), 1, summarize, L1_norm = dist_tp(c(donor_id, recipient_id), snv = df_snvs_isnvs_purged)) # Get the genetic distance between pairs! Takes the longest.
+#View(possible_pairs.dist_ch3)
+
+## L1_norm all sites dists
+## ~/temp/Collaborations/covid/whd/ch1_ch3/san_paper_l1norm_filtered_jan17.csv
+san_paper_l1norm_filtered_jan17 <- read_csv("data/l1_norm.txt")
+#View(san_paper_l1norm_filtered_jan17)
+san_paper_l1norm_filtered_jan17$Sample1 <- sapply(str_split(san_paper_l1norm_filtered_jan17$Sample1, 
+                                               "_", n = 2, simplify = FALSE), `[`, 1)
+san_paper_l1norm_filtered_jan17$Sample2 <- sapply(str_split(san_paper_l1norm_filtered_jan17$Sample2, 
+                                               "_", n = 2, simplify = FALSE), `[`, 1)
+
+san_paper_l1norm_filtered_jan17$X1 <- NULL
+san_paper_l1norm_filtered_jan17$pairId <- paste0(san_paper_l1norm_filtered_jan17$Sample1, "_", san_paper_l1norm_filtered_jan17$Sample2)
+
+df_all_ch3_pairs_sd_shared_l1_norm <- inner_join(df_all_ch3_pairs_sd_shared_l1_norm, san_paper_l1norm_filtered_jan17, by = "pairId")
+
+
+ggscatter(df_all_ch3_pairs_sd_shared_l1_norm, x = "days_between_samples", y = "L1norm",
+                 add = "reg.line",  # Add regressin line
+                 add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+                 conf.int = TRUE # Add confidence interval
+  )+ xlab("No. of days between samples") +
+  ylab("L1_norm") + 
+  #facet_grid(cols = vars(Sample)) +
+  stat_cor(method = "pearson") + 
+  theme_bw()+
+  theme(axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=12),
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 12))
+
+
+
+ggscatter(df_all_ch3_pairs_sd_shared_l1_norm, x = "don_rec_shared_count", y = "L1_norm",
+                 add = "reg.line",  # Add regressin line
+                 add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+                 conf.int = TRUE # Add confidence interval
+  )+ xlab("No. of shared variants") +
+  ylab("L1_norm") + 
+  #facet_grid(cols = vars(Sample)) +
+  stat_cor(method = "pearson") + 
+  theme_bw()+
+  theme(axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        axis.text=element_text(size=12),
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 12))
+
+
+
+
+```
+
+##  Bottleneck Analysis
+
+Next we assessed the transmission bottleneck (founding viral population size) within the known donor/reciepient pairs
+
+### CH1 bottleneck analysis
+```{r transmission-bottle-neck-ch1}
+#Process input for bb_bottleneck and run it
+for (row in 1:nrow(df_transmission_pairs_ch1)) {
+   donorId <- df_transmission_pairs_ch1[row, "donor_id"]
+   recipientId <- df_transmission_pairs_ch1[row, "recipient_id"]
+
+   donor <- df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample == donorId, c("Sample","POS","REF","ALT","AF", "R1","R2", "Depth", "Mutation")]
+   colnames(donor) <- paste0("D_", colnames(donor))
+   donor <- donor %>% filter(D_AF <= 0.5)
+
+
+   recipient <- df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample == recipientId, c("Sample","POS","REF","ALT","AF", "R1","R2", "Depth", "Mutation")]
+   colnames(recipient) <- paste0("R_", colnames(recipient))
+
+   pair_001 <- left_join(donor, recipient, by = c("D_Mutation"="R_Mutation"))
+   pair_001 <- pair_001 %>% mutate(R_Sample = ifelse(is.na(R_Sample), recipientId, R_Sample),
+                                   R_POS = ifelse(is.na(R_POS), D_POS, R_POS),
+                                   R_REF = ifelse(is.na(R_REF), D_REF, R_REF),
+                                   R_ALT = ifelse(is.na(R_ALT), D_ALT, R_ALT),
+                                   R_AF = ifelse(is.na(R_AF), 0, R_AF),
+                                   R_R1 = ifelse(is.na(R_R1), 0, R_R1),
+                                   R_R2 = ifelse(is.na(R_R2), 0, R_R2),
+                                   R_Depth = ifelse(is.na(R_Depth),0,R_Depth))
+
+   if(dim(pair_001)[1] > 0){
+     write.table(pair_001[, c("D_AF","R_AF", "R_Depth", "R_R2")], paste0("pair_freqs/",donorId, "_", recipientId,"-isnv_Freqs.txt"),
+               quote = F, row.names = F, col.names = F, sep = "\t")
+   }
+ }
+
+
+ source("scripts/ch1_bottleneck_analysis_exact.R") #or just import the results if nothing has changed
+
+df_bottle_neck <- read_xlsx("pair_freqs/df_ch1_bottle_neck.xlsx")
+df_bottle_neck$transPair <- as.character(df_bottle_neck$transPair)
+df_staug_minor_allele_distn__$fromToSeq <- as.character(df_staug_minor_allele_distn__$fromToSeq)
+df_staug_minor_allele_distn___ <- left_join(df_staug_minor_allele_distn__, df_bottle_neck, by = c("fromToSeq" = "transPair"))
+
+## Prepare submission table
+df_staug_minor_allele_distn___$L1_norm <- round(df_staug_minor_allele_distn___$L1_norm)
+df_staug_minor_allele_distn_final <- df_staug_minor_allele_distn___ %>% select(from_to, days_, snpdist, don_rec_shared_count, don_rec_shared,  BottleNeck, lowerCI, upperCI, L1_norm)
+#df_staug_minor_allele_distn[, c(1:4,7:9,5:6)] %>%  kbl(caption = "Transmission Bottleneck Analsysis (BB_Bottleneck) - CH1 Paired Samples") %>%
+#kable_paper(bootstrap_options = "striped", full_width = F)
+
+###Table 3
+write_xlsx(df_staug_minor_allele_distn_final, "df_ch1_shared_bottleneck_dists.xlsx")
+
+```
+
+### Bottleneck Analysis in CH3
+
+```{r transmission-bottle-neck-ch3, echo=TRUE}
+## Reivew false in colum 2
+
+# for (row in 1:nrow(df_all_ch3_pairs)) {
+#    donorId <- df_all_ch3_pairs[row, "donor"]
+#    recipientId <- df_all_ch3_pairs[row, "recipient"]
+# 
+#    donor <- df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample == donorId, c("Sample","POS","REF","ALT","AF", "R1","R2", "Mutation")]
+#    colnames(donor) <- paste0("D_", colnames(donor))
+#    donor <- donor %>% filter(D_AF <= 0.5)
+# 
+# 
+# 
+#    recipient <- df_snvs_isnvs_purged[df_snvs_isnvs_purged$Sample == recipientId, c("Sample","POS","REF","ALT","AF", "R1","R2", "Mutation")]
+#    colnames(recipient) <- paste0("R_", colnames(recipient))
+# 
+#    pair_001 <- inner_join(donor, recipient, by = c("D_Mutation"="R_Mutation"))
+# 
+#    if(dim(pair_001)[1] > 0){
+#      write.table(pair_001[, c("D_AF","R_AF", "R_Depth", "R_R2")], paste0("pair_freqs_ch3/",donorId, "_", recipientId,"-isnv_Freqs.txt"),
+#                quote = F, row.names = F, col.names = F, sep = "\t")
+#    }
+#  }
+
+
+# cmd_isnv_freqs <- "ls -1 pair_freqs_ch3/*-isnv_Freqs.txt"
+# isnv_freqsList <- system(cmd_isnv_freqs, intern = T)
+# 
+# df_bottle_neck_ch3 = data.frame()
+# for (freqs_file in isnv_freqsList) {
+#   fname <- sapply(str_split(freqs_file, "/", n = 2, simplify = FALSE), `[`, 2)
+#   fname <- gsub("-isnv_Freqs.txt","",fname)
+#   source("scripts/Bottleneck_size_estimation_approx_sj.R")
+#   bottle_neck <- data.frame(transPair = fname, "BottleNeck" = Max_LL_bottleneck, "lowerCI" = lower_CI_bottleneck,
+#                           "upperCI" = upper_CI_bottleneck, stringsAsFactors = F)
+#   df_bottle_neck_ch3 <- rbind(df_bottle_neck_ch3, bottle_neck)
+# }
+
+### Because the bottleneck analysis takes long to run for CH3, computed by the ch3 bottleneck script and the results imported here, Only run this here.
+df_bottle_neck_ch3 <- read_excel("pair_freqs_ch3/exact/1000/df_bottle_neck_ch3_NbMax1000.xlsx")
+
+df_all_ch3_pairs_sd_shared_l1_norm_bottleneck <- left_join(df_all_ch3_pairs_sd_shared_l1_norm, df_bottle_neck_ch3, by = c("fromToSeq" = "transPair"))
+
+df_all_ch3_pairs_sd_shared_l1_norm_bottleneck_final <- df_all_ch3_pairs_sd_shared_l1_norm_bottleneck[, c("pairOId_HW","days_between_samples", "snpdist", "shared_isnv", "don_rec_shared_count", "BottleNeck","lowerCI", "upperCI", "L1_norm")]
+writexl::write_xlsx(df_all_ch3_pairs_sd_shared_l1_norm_bottleneck_final, "supp_table4_df_all_ch3_pairs_sd_shared_l1_norm_bottleneck_final.xlsx")
+
+#df_CH3_shared_bottleneck_no_NA <- df_CH3_shared_bottleneck %>% filter(!is.na(BottleNeck) & BottleNeck > 50)
+#summary(df_CH3_shared_bottleneck_no_NA$BottleNeck)
+
+
+```
+### Compare effect of masking
+```{r}
+
+df_comp_mask_staug <- read_xlsx("compare_mask_results.xlsx")
+df_mask_bottleneck <- df_comp_mask_staug %>% select(transPair, mask, bottleneck)
+df_mask_bottleneck_wide <- df_mask_bottleneck %>% spread(mask, bottleneck)
+colnames(df_mask_bottleneck_wide)[2:3] <- c("unmasked", "masked")
+
+##paired ttest
+attach(df_mask_bottleneck_wide)
+boxplot(unmasked, masked)
+t.test(masked, unmasked, mu = 0, alt = "less", paired = T, conf.level = 0.95)
+detach(df_mask_bottleneck_wide)
+
+
+## ch3
+df_comp_mask_ch3 <- read_xlsx("compare_musk_results_ch3.xlsx")
+df_ch3_bottleneck <- df_comp_mask_ch3 %>% select(transPair, mask, bottleneck)
+df_ch3_bottleneck_wide <- df_ch3_bottleneck %>% spread(mask, bottleneck)
+
+attach(df_ch3_bottleneck_wide)
+boxplot(unmasked, masked)
+plot(unmasked, masked)
+abline(a=0, b=0)
+t.test(unmasked, masked, mu = 0, alt = "greater", paired = T, conf.level = 0.95)
+detach(df_ch3_bottleneck_wide)
+
+df_ch3_shared_variants <- df_comp_mask_ch3 %>% select(transPair, mask, sharediSNVs)
+df_ch3_shared_variants_wide <- df_ch3_shared_variants %>% spread(mask, sharediSNVs)
+
+
+```
+
+### Complexity and Diversty
+
+```{r complexity-and-diversity}
+
+### Synonymous vs nonsynonymous
+
+
+cmd5 <- "ls -1 /Users/sanem/temp/Collaborations/covid/whd/ch1_ch3/100/selection/SNPGenie/*_population_summary.txt"
+popsumList <- system(cmd5, intern = T)
+
+df_popsum = data.frame()
+
+for (ps in popsumList) {
+  ps0 <- read_delim(ps, "\t", escape_double = FALSE, col_types = cols(.default = "c"), trim_ws = TRUE)
+  df_popsum <- rbind(df_popsum, ps0)
+}
+
+df_popsum$piN <- as.numeric(df_popsum$piN)
+df_popsum$piS <- as.numeric(df_popsum$piS)
+df_popsum$pi <- as.numeric(df_popsum$pi)
+df_popsum$piN_piS_ratio <- df_popsum$piN/df_popsum$piS
+df_popsum[is.na(df_popsum$piN_piS_ratio), "piN_piS_ratio"] <- 0
+df_popsum[is.nan(df_popsum$piN_piS_ratio), "piN_piS_ratio"] <- 0
+df_popsum[is.infinite(df_popsum$piN_piS_ratio), "piN_piS_ratio"] <- 0
+
+df_popsum$selection <- ifelse(df_popsum$piN_piS_ratio > 1, "positive", "purifying")
+df_popsum[df_popsum$piN == df_popsum$piS, "selection"] <- "neutral"
+
+df_popsum$file <- gsub("../../", "", df_popsum$file)
+df_popsum$file <- gsub("_fill.vcf", "", df_popsum$file)
+df_popsum$file <- sapply(str_split(df_popsum$file, "_", n = 2, simplify = FALSE), `[`, 1)
+
+df_popsum_purged <- df_popsum[df_popsum$file %in% sample_ids_purged$seqIds, ]
+df_popsum_purged <- inner_join(df_popsum, sample_ids_purged, by = c("file"= "seqIds"))
+
+## Plots
+# mean pi
+p_outbreak <- ggplot(df_popsum_purged, aes(factor(outbreak), pi, fill = outbreak)) +
+  geom_boxplot() +
+  ylab("Mean π") +
+  xlab("")+
+  theme_bw() +
+  theme(axis.text = element_text(face="plain", color="#000000", size=12),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        legend.title=element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.position = "top")+
+  scale_fill_manual(values=c(rgb(0.1,0.1,0.7,0.5) , rgb(0.8,0.1,0.3,0.6)))
+p_outbreak
+pi_stats_ch1 <- df_popsum_purged %>% filter(outbreak == "CH1") %>% select(pi,piS,piN_piS_ratio)
+pi_stats_ch3 <- df_popsum_purged %>% filter(outbreak == "CH3") %>% select(pi,piS,piN_piS_ratio)
+ks.test(pi_stats_ch1$pi, pi_stats_ch3$pi)
+
+# mean Sn
+p_outbreak <- ggplot(df_popsum_purged, aes(factor(outbreak), piS, fill = outbreak)) +
+  geom_boxplot() +
+  ylab("Mean Sn") +
+  xlab("")+
+  theme_bw() +
+  theme(axis.text = element_text(face="plain", color="#000000", size=12),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        legend.title=element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.position = "top")+
+  scale_fill_manual(values=c(rgb(0.1,0.1,0.7,0.5) , rgb(0.8,0.1,0.3,0.6)))
+p_outbreak
+
+ks.test(pi_stats_ch1$piS, pi_stats_ch3$piS)
+
+#piN/piS
+p_outbreak <- ggplot(df_popsum_purged, aes(factor(outbreak), piN_piS_ratio, fill = outbreak)) +
+  geom_boxplot() +
+  #geom_point() +
+  geom_hline(yintercept=1, linetype = 'dotted', col = 'red', size =1) +
+  ylab("πN/πS") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text = element_text(face="plain", color="#000000", size=12),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        legend.title=element_text(size=14),
+        legend.text=element_text(size=12),
+        legend.position = "top")+
+   scale_fill_manual(values=c(rgb(0.1,0.1,0.7,0.5) , rgb(0.8,0.1,0.3,0.6)))
+p_outbreak
+
+ks.test(pi_stats_ch1$piN_piS_ratio, pi_stats_ch3$piN_piS_ratio)
+
+message("Selection pressure on genomes")
+table(df_popsum_purged$outbreak, df_popsum_purged$selection)  %>% kbl(caption = "Selection Pressure") %>% kable_styling()
+df_selection <- data.frame(table(df_popsum_purged$outbreak, df_popsum_purged$selection), stringsAsFactors = F)
+df_selection <- spread(df_selection, Var1, Freq)
+ks.test(df_selection$CH1, df_selection$CH3, exact = T)
+
+##summary stats all
+summary(df_popsum_purged$pi) ## 
+
+## summary stats ch1
+df_popsum_purged_ch1 <- df_popsum_purged %>% filter(outbreak == "CH1")
+summary(df_popsum_purged_ch1$pi) %>% tidy() %>% kbl(caption = "PI CH1 summary stats") %>% kable_styling()
+
+## summary stats ch3
+df_popsum_purged_ch3 <- df_popsum_purged %>% filter(outbreak == "CH3")
+summary(df_popsum_purged_ch3$pi) %>% tidy() %>% kbl(caption = "PI CH3 summary stats") %>% kable_styling()
+
+
+
+### look at sites:
+cmd8 <- "ls -1 /Users/sanem/temp/Collaborations/covid/whd/ch1_ch3/100/selection/SNPGenie/*_site_results.txt"
+sitesList <- system(cmd8, intern = T)
+
+df_sites = data.frame()
+
+for (ps in sitesList) {
+  ps0 <- read_delim(ps, "\t", escape_double = FALSE, col_types = cols(.default = "c"), trim_ws = TRUE)
+  df_sites <- rbind(df_sites, ps0)
+}
+
+#df_sites <- df_sites %>% mutate(A = as.numeric(A),
+#                                C = as.numeric(C),
+#                                T = as.numeric(T),
+#                                G = as.numeric(G),
+#                                coverage = as.numeric(coverage),
+#                                Polymorphism = ifelse((A/coverage) > 0.5 | (C/coverage) > 0.5 | (G/coverage) > 0.5 | (T/coverage) > 0.5, "SNV", "iSNV"))
+```
+
+### iSNV vs SNV - diversity
+```{r isnv-diversity}
+# ## Get snv pop summary
+# cmd6 <- "ls -1 /Users/sanem/temp/Collaborations/covid/whd/ch1_ch3/100/selection/SNPGenie/snv/*_population_summary.txt"
+# popsumListSnv <- system(cmd6, intern = T)
+# 
+# df_popsum_snv = data.frame()
+# 
+# for (ps in popsumListSnv) {
+#   ps1 <- read_delim(ps, "\t", escape_double = FALSE, col_types = cols(.default = "c"), trim_ws = TRUE)
+#   df_popsum_snv <- rbind(df_popsum_snv, ps1)
+# }
+# 
+# df_popsum_snv$Polymorphism <- "SNV"
+# 
+# 
+# ## Get isnv pop summary
+# cmd7 <- "ls -1 /Users/sanem/temp/Collaborations/covid/whd/ch1_ch3/100/selection/SNPGenie/isnv/*_population_summary.txt"
+# popsumListiSnv <- system(cmd7, intern = T)
+# 
+# df_popsum_isnv = data.frame()
+# 
+# for (ps in popsumListiSnv) {
+#   ps1 <- read_delim(ps, "\t", escape_double = FALSE, col_types = cols(.default = "c"), trim_ws = TRUE)
+#   df_popsum_isnv <- rbind(df_popsum_isnv, ps1)
+# }
+# 
+# df_popsum_isnv$Polymorphism <- "iSNV"
+# 
+# df_popsum_snv_isnv <- rbind(df_popsum_snv, df_popsum_isnv)
+# 
+# df_popsum_snv_isnv[, c(10:11)] <- lapply(df_popsum_snv_isnv[, c(10:11)], as.numeric)
+# 
+# df_popsum_snv_isnv <- df_popsum_snv_isnv %>% mutate(piN_piS_ratio = piN/piS)
+# 
+# df_popsum_snv_isnv$piN_piS_ratio <- ifelse(is.infinite(df_popsum_snv_isnv$piN_piS_ratio) | is.nan(df_popsum_snv_isnv$piN_piS_ratio), 0, df_popsum_snv_isnv$piN_piS_ratio)
+# 
+# ##piN/piS
+# p_outbreak_i_snvs <- ggplot(df_popsum_snv_isnv, aes(factor(Polymorphism), piN_piS_ratio, fill = Polymorphism)) +
+#   geom_boxplot() +
+#   geom_hline(yintercept=1, linetype = 'dotted', col = 'red') +
+#   ylab("πN/πS") +
+#   xlab("") +
+#   theme_bw() +
+#   theme(axis.text = element_text(face="plain", color="#000000", size=12),
+#         panel.grid.major.x = element_blank(),
+#         panel.grid.minor = element_blank(),
+#         axis.title.x = element_text(size=15),
+#         axis.title.y = element_text(size=15),
+#         legend.title=element_text(size=14),
+#         legend.text=element_text(size=12),
+#         legend.position = "top")+
+#     scale_fill_manual(values=c(rgb(0.1,0.1,0.7,0.5) , rgb(0.8,0.1,0.3,0.6)))
+# p_outbreak_i_snvs
+# 
+# # ## Compare CH1 CH3 SNVs
+# # # get product names
+ C19_product_gene_names <- read_delim("C19_product_gene_names.txt",
+     "\t", escape_double = FALSE, trim_ws = TRUE)
+# #
+# # compare_ch1_ch3_snvs <- read_delim(file="~/temp/Collaborations/covid/whd/ch1_ch3/SNPGenie/compare_ch1_ch3/between_group_product_results.txt", delim = "\t")
+# # 
+# # compare_ch1_ch3_snvs <- left_join(compare_ch1_ch3_snvs, C19_product_gene_names, by = "product")
+# # compare_ch1_ch3_snvs$group_1 <- "CH1_n35"
+# # compare_ch1_ch3_snvs$group_2 <- "CH3_n74"
+# # compare_ch1_ch3_snvs %>% kbl() %>% kable_styling()
+# # 
+# # write_xlsx(compare_ch1_ch3_snvs, "compare_ch1_ch3_snvs_snpgenie.xlsx")
+
+## Product summary
+cmd8 <- "ls -1 /Users/sanem/temp/Collaborations/covid/whd/ch1_ch3/100/selection/SNPGenie/*_product_results.txt"
+popsumListProd <- system(cmd8, intern = T)
+
+df_popsum_prod = data.frame()
+
+for (ps in popsumListProd) {
+  ps1 <- read_delim(ps, "\t", escape_double = FALSE, col_types = cols(.default = "c"), trim_ws = TRUE)
+  df_popsum_prod <- rbind(df_popsum_prod, ps1)
+}
+
+# 
+# ## Add product names
+# 
+df_popsum_prod_names <- left_join(df_popsum_prod, C19_product_gene_names, by = "product")
+
+df_popsum_prod_names <- df_popsum_prod_names %>% mutate(piN = as.numeric(piN),
+                                                        piS = as.numeric(piS),
+                                                        piN_piS_ratio = piN/piS)
+df_popsum_prod_names$piN_piS_ratio <- ifelse(is.infinite(df_popsum_prod_names$piN_piS_ratio) |
+                                             is.nan(df_popsum_prod_names$piN_piS_ratio), 0, df_popsum_prod_names$piN_piS_ratio)
+## One unique sample with a ratio of 7 in the spike...needs review
+df_popsum_prod_names <- df_popsum_prod_names[df_popsum_prod_names$piN_piS_ratio < 4, ]
+# #piN/piS
+p_popn_prod <- ggplot(df_popsum_prod_names, aes(factor(gene), piN_piS_ratio, fill = gene)) +
+  geom_boxplot() +
+  geom_hline(yintercept=1, linetype = 'dotted', col = 'red', size = 1) +
+  ylab("πN/πS") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(face="plain", color="#000000", size=12, angle=90, margin = margin(0,0,0,0)),
+        axis.text.y = element_text(face="plain", color="#000000", size=12),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size=15),
+        axis.title.y = element_text(size=15),
+        legend.title=element_text(size=14),
+        legend.text=element_text(size=12))
+p_popn_prod
+
+ df_popsum_prod_names %>% group_by(gene) %>% summarise(mean_piN_piS_ratio = mean(piN_piS_ratio)) %>% kbl() %>% kable_styling()
+
+```
+
+### Diversity at genomic sites
+```{r}
+
+cmd6 <- "ls -1 /Users/sanem/temp/Collaborations/covid/whd/ch1_ch3/100/selection/SNPGenie/*_site_results.txt"
+siteSumList <- system(cmd5, intern = T)
+
+df_siteSum = data.frame()
+
+for (ps in siteSumList) {
+  ps0 <- read_delim(ps, "\t", escape_double = FALSE, col_types = cols(.default = "c"), trim_ws = TRUE)
+  df_siteSum <- rbind(df_siteSum, ps0)
+}
+
+
+```
+
+
+## Drug targets
+```{r}
+
+C19_GUs <- read_delim("C19_GUs.txt", "\t", 
+    escape_double = FALSE, trim_ws = TRUE)
+C19_GUs <- C19_GUs %>% select(c(1:4,9))
+C19_GUs %>% kbl() %>% kable_styling()
+
+```
+

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1618860648525.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1682008936",
+    "id" : "1700C694",
+    "lastKnownWriteTime" : 1618861439,
+    "last_content_update" : 1618861439617,
+    "path" : "~/temp/Collaborations/covid/whd/analysis/diversity-analysis.Rmd",
+    "project_path" : "diversity-analysis.Rmd",
+    "properties" : {
+        "cursorPosition" : "827,1",
+        "scrollLine" : "825"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

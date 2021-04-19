@@ -1,0 +1,27 @@
+"0","## Shannon diversity plot"
+"0","CH1_CH3_variation <- read_delim(""~/temp/Collaborations/covid/whd/ch1_ch3/SNPGenie_out/compare_ch1_ch3/raw/CH1_CH3_purged_variation.csv"", "
+"0","                                       ""\t"", escape_double = FALSE, trim_ws = TRUE)"
+"2","Parsed with column specification:
+cols(
+  position = [32mcol_double()[39m,
+  variation = [32mcol_double()[39m,
+  conservation = [32mcol_double()[39m
+)
+"
+"0","# View(CH1_CH3_variation)"
+"0","plt_variation <- ggplot(CH1_CH3_variation, aes(x = position/1000, y = variation)) +"
+"0","                          geom_bar(stat=""identity"", width=0.04, fill='royalblue3') +"
+"0","                          xlab(""Genome Position (Kb)"")+"
+"0","                          ylab(""Variation (Shannon uncertainty)"")+"
+"0","                          scale_y_continuous(limits = c(0,0.5),breaks = seq(0, 0.5, by = 0.25))+"
+"0","                          scale_x_continuous(limits = c(0,30),breaks = seq(0, 30, by = 5))+"
+"0","                          geom_hline(yintercept=0.25, color = ""gray75"", alpha=0.5)+"
+"0","                          geom_hline(yintercept=0.5, color = ""gray75"", alpha=0.5)+"
+"0","                          theme_minimal() +"
+"0","                          theme(panel.grid.major = element_blank(),"
+"0","                                panel.grid.minor = element_blank(),"
+"0","                                axis.title.x = element_text(size=15),"
+"0","                                axis.title.y = element_text(size=15),"
+"0","                                axis.text=element_text(size=10),"
+"0","                                axis.line.x = element_line(colour = ""black"", size = 0.5))"
+"0","plt_variation"

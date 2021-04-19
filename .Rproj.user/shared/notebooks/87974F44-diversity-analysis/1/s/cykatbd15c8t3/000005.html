@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+<script src="lib/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="lib/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="lib/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="lib/kePrint-0.0.1/kePrint.js"></script>
+<link href="lib/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+</head>
+<body>
+<table class="table table-striped" style="font-size: 9px; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> from_to </th>
+   <th style="text-align:left;"> fromToSeq </th>
+   <th style="text-align:left;"> don_rec_shared </th>
+   <th style="text-align:right;"> don_rec_shared_count </th>
+   <th style="text-align:left;"> donor_only_isnvs </th>
+   <th style="text-align:left;"> reciepient_only_isnvs </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> P3_P10 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-040-R </td>
+   <td style="text-align:left;"> U11288G|A12240G|A13003G|A20465G </td>
+   <td style="text-align:right;width: 30em; "> 4 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|A11556U|G12566C|A13587U|A14545U|G14707A|G18181U|C20582A|U22507A|U22514A|G22763A|G23302A|C23306G|A27548U|C29187U|A29188G </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|A11556U|G12566C|A13587U|A14545U|G14707A|G18181U|C20582A|U22507A|U22514A|G22763A|G23302A|C23306G|A27548U|C29187U|A29188G </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_HW4 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-0057 </td>
+   <td style="text-align:left;"> G11241A|G11243C|U11288G|A11556U|A12240G|A13003G|G14707A|A20465G|U22507A|C29187U|A29188G </td>
+   <td style="text-align:right;width: 30em; "> 11 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G12566C|A13587U|A14545U|G18181U|C20582A|U22514A|G22763A|G23302A|C23306G|A27548U </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G12566C|A13587U|A14545U|G18181U|C20582A|U22514A|G22763A|G23302A|C23306G|A27548U </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_P13 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-0066 </td>
+   <td style="text-align:left;"> U11288G|A11556U|A12240G|A13003G|A13587U|G14707A|G18181U|A20465G|U22507A|U22514A </td>
+   <td style="text-align:right;width: 30em; "> 10 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|G12566C|A14545U|C20582A|G22763A|G23302A|C23306G|A27548U|C29187U|A29188G </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|G12566C|A14545U|C20582A|G22763A|G23302A|C23306G|A27548U|C29187U|A29188G </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_P21 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-91 </td>
+   <td style="text-align:left;"> U11288G|A11556U|A12240G|A13003G|G14707A|G18181U|A20465G|U22507A|G22763A|C29187U|A29188G </td>
+   <td style="text-align:right;width: 30em; "> 11 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|G12566C|A13587U|A14545U|C20582A|U22514A|G23302A|C23306G|A27548U </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|G12566C|A13587U|A14545U|C20582A|U22514A|G23302A|C23306G|A27548U </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_P22 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-88 </td>
+   <td style="text-align:left;"> U11288G|A11556U|A12240G|A13003G|G14707A|G18181U|A20465G|U22507A|G22763A|C29187U|A29188G </td>
+   <td style="text-align:right;width: 30em; "> 11 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|G12566C|A13587U|A14545U|C20582A|U22514A|G23302A|C23306G|A27548U </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|G12566C|A13587U|A14545U|C20582A|U22514A|G23302A|C23306G|A27548U </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_P5 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-0016 </td>
+   <td style="text-align:left;"> A11556U|A12240G|G22763A|G23302A|C23306G|C29187U|A29188G </td>
+   <td style="text-align:right;width: 30em; "> 7 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|G12566C|A13003G|A13587U|A14545U|G14707A|G18181U|A20465G|C20582A|U22507A|U22514A|A27548U </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|G12566C|A13003G|A13587U|A14545U|G14707A|G18181U|A20465G|C20582A|U22507A|U22514A|A27548U </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_P7 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-0017 </td>
+   <td style="text-align:left;"> A12240G|A13003G|A13587U|G18181U|G23302A|C23306G </td>
+   <td style="text-align:right;width: 30em; "> 6 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|A11556U|G12566C|A14545U|G14707A|A20465G|C20582A|U22507A|U22514A|G22763A|A27548U|C29187U|A29188G </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|A11556U|G12566C|A14545U|G14707A|A20465G|C20582A|U22507A|U22514A|G22763A|A27548U|C29187U|A29188G </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_P29 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-81 </td>
+   <td style="text-align:left;"> A12240G|A13003G|G14707A|G18181U|A20465G|U22507A|G22763A </td>
+   <td style="text-align:right;width: 30em; "> 7 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|A11556U|G12566C|A13587U|A14545U|C20582A|U22514A|G23302A|C23306G|A27548U|C29187U|A29188G </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|A11556U|G12566C|A13587U|A14545U|C20582A|U22514A|G23302A|C23306G|A27548U|C29187U|A29188G </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_P20 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-84 </td>
+   <td style="text-align:left;"> A11556U|A12240G|A13003G|G14707A|G18181U|A20465G|C29187U|A29188G </td>
+   <td style="text-align:right;width: 30em; "> 8 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|G12566C|A13587U|A14545U|C20582A|U22507A|U22514A|G22763A|G23302A|C23306G|A27548U </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|G12566C|A13587U|A14545U|C20582A|U22507A|U22514A|G22763A|G23302A|C23306G|A27548U </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P3_P27 </td>
+   <td style="text-align:left;"> KPCOVID-0055_KPCOVID-0112 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:right;width: 30em; "> 0 </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|A11556U|A12240G|G12566C|A13003G|A13587U|A14545U|G14707A|G18181U|A20465G|C20582A|U22507A|U22514A|G22763A|G23302A|C23306G|A27548U|C29187U|A29188G </td>
+   <td style="text-align:left;width: 50em; "> G510C|G3901A|A5341U|G5690A|G7160A|G8105A|U8996C|G11241A|G11243C|U11288G|A11556U|A12240G|G12566C|A13003G|A13587U|A14545U|G14707A|G18181U|A20465G|C20582A|U22507A|U22514A|G22763A|G23302A|C23306G|A27548U|C29187U|A29188G </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> HW4_P11 </td>
+   <td style="text-align:left;"> KPCOVID-0057_KPCOVID-0067 </td>
+   <td style="text-align:left;"> U11288G|A11556U|A12240G|A13003G|G14707A|C17933G|U20135A|U22507A </td>
+   <td style="text-align:right;width: 30em; "> 8 </td>
+   <td style="text-align:left;width: 50em; "> U851C|C6242A|A6243G|C6317G|G6323A|U7502A|U7997C|A8129U|U8971A|U8973C|G9083A|C9165U|C10965U|G11083U|G11241A|G11243C|U11253A|A11282G|A11307U|U11599C|A12476U|G14948U|G16968C|G18197A|A22330U|U22417C|A22422U|A26748U|C27737A|C29187U|A29188G </td>
+   <td style="text-align:left;width: 50em; "> U851C|C6242A|A6243G|C6317G|G6323A|U7502A|U7997C|A8129U|U8971A|U8973C|G9083A|C9165U|C10965U|G11083U|G11241A|G11243C|U11253A|A11282G|A11307U|U11599C|A12476U|G14948U|G16968C|G18197A|A22330U|U22417C|A22422U|A26748U|C27737A|C29187U|A29188G </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> HW4_P15 </td>
+   <td style="text-align:left;"> KPCOVID-0057_KPCOVID-0115 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:right;width: 30em; "> 0 </td>
+   <td style="text-align:left;width: 50em; "> U851C|C6242A|A6243G|C6317G|G6323A|U7502A|U7997C|A8129U|U8971A|U8973C|G9083A|C9165U|C10965U|G11083U|G11241A|G11243C|U11253A|A11282G|U11288G|A11307U|A11556U|U11599C|A12240G|A12476U|A13003G|G14707A|G14948U|G16968C|C17933G|G18197A|U20135A|A22330U|U22417C|A22422U|U22507A|A26748U|C27737A|C29187U|A29188G </td>
+   <td style="text-align:left;width: 50em; "> U851C|C6242A|A6243G|C6317G|G6323A|U7502A|U7997C|A8129U|U8971A|U8973C|G9083A|C9165U|C10965U|G11083U|G11241A|G11243C|U11253A|A11282G|U11288G|A11307U|A11556U|U11599C|A12240G|A12476U|A13003G|G14707A|G14948U|G16968C|C17933G|G18197A|U20135A|A22330U|U22417C|A22422U|U22507A|A26748U|C27737A|C29187U|A29188G </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P7_P23 </td>
+   <td style="text-align:left;"> KPCOVID-0017_KPCOVID-89 </td>
+   <td style="text-align:left;"> A12240G|A13003G|U17928G|A17929C|C17933G|G18181U|C18904U|U20135A|A20387G </td>
+   <td style="text-align:right;width: 30em; "> 9 </td>
+   <td style="text-align:left;width: 50em; "> U851C|A3327G|A3870G|C4245U|C4746U|C6317G|G6323A|C8106U|U9395A|A9400U|A10298U|U10546G|C12053G|G12419A|A13587U|U13719C|G17252U|A17256G|C19097U|U20799A|C21301U|C21707U|G23302A|C23306G|U23584A|U24552C|C25132A|A25136G|C25803U|U26394G|A26401U </td>
+   <td style="text-align:left;width: 50em; "> U851C|A3327G|A3870G|C4245U|C4746U|C6317G|G6323A|C8106U|U9395A|A9400U|A10298U|U10546G|C12053G|G12419A|A13587U|U13719C|G17252U|A17256G|C19097U|U20799A|C21301U|C21707U|G23302A|C23306G|U23584A|U24552C|C25132A|A25136G|C25803U|U26394G|A26401U </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P7_X1 </td>
+   <td style="text-align:left;"> KPCOVID-0017_KPCOVID-0021REP </td>
+   <td style="text-align:left;"> C12053G|A12240G|A13003G|A13587U|G17252U|A17256G|U17928G|A17929C|C17933G|G18181U|C18904U|U24552C|C25132A|A25136G </td>
+   <td style="text-align:right;width: 30em; "> 14 </td>
+   <td style="text-align:left;width: 50em; "> U851C|A3327G|A3870G|C4245U|C4746U|C6317G|G6323A|C8106U|U9395A|A9400U|A10298U|U10546G|G12419A|U13719C|C19097U|U20135A|A20387G|U20799A|C21301U|C21707U|G23302A|C23306G|U23584A|C25803U|U26394G|A26401U </td>
+   <td style="text-align:left;width: 50em; "> U851C|A3327G|A3870G|C4245U|C4746U|C6317G|G6323A|C8106U|U9395A|A9400U|A10298U|U10546G|G12419A|U13719C|C19097U|U20135A|A20387G|U20799A|C21301U|C21707U|G23302A|C23306G|U23584A|C25803U|U26394G|A26401U </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> P7_P26 </td>
+   <td style="text-align:left;"> KPCOVID-0017_KPCOVID-0113 </td>
+   <td style="text-align:left;">  </td>
+   <td style="text-align:right;width: 30em; "> 0 </td>
+   <td style="text-align:left;width: 50em; "> U851C|A3327G|A3870G|C4245U|C4746U|C6317G|G6323A|C8106U|U9395A|A9400U|A10298U|U10546G|C12053G|A12240G|G12419A|A13003G|A13587U|U13719C|G17252U|A17256G|U17928G|A17929C|C17933G|G18181U|C18904U|C19097U|U20135A|A20387G|U20799A|C21301U|C21707U|G23302A|C23306G|U23584A|U24552C|C25132A|A25136G|C25803U|U26394G|A26401U </td>
+   <td style="text-align:left;width: 50em; "> U851C|A3327G|A3870G|C4245U|C4746U|C6317G|G6323A|C8106U|U9395A|A9400U|A10298U|U10546G|C12053G|A12240G|G12419A|A13003G|A13587U|U13719C|G17252U|A17256G|U17928G|A17929C|C17933G|G18181U|C18904U|C19097U|U20135A|A20387G|U20799A|C21301U|C21707U|G23302A|C23306G|U23584A|U24552C|C25132A|A25136G|C25803U|U26394G|A26401U </td>
+  </tr>
+</tbody>
+</table> <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [["$","$"]]}})</script><script async src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

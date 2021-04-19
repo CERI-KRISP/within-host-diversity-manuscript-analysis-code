@@ -1,0 +1,11 @@
+"0","## Variant stats:"
+"0","# Unique positions"
+"0","message(""Unique Positions with variants: "", length(unique(df_snvs_isnvs_purged$POS)))"
+"2","Unique Positions with variants: 1337
+"
+"0","mutation_set_data <- set_data"
+"0","mutation_set_data$POS  <-  as.numeric(numextract(mutation_set_data$Mutations))"
+"0","mutation_set_data_isnvs <- mutation_set_data %>% filter(CH1_SNV == ""FALSE"" & CH3_SNV == ""FALSE"")"
+"0","message(""Unique Positions with only iSNVs: "", length(unique(mutation_set_data_isnvs$POS)))"
+"2","Unique Positions with only iSNVs: 1135
+"

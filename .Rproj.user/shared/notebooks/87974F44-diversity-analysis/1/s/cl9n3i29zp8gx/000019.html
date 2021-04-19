@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+<script src="lib/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="lib/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="lib/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="lib/kePrint-0.0.1/kePrint.js"></script>
+<link href="lib/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+</head>
+<body>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> GENE </th>
+   <th style="text-align:right;"> Length </th>
+   <th style="text-align:right;"> HIGH </th>
+   <th style="text-align:right;"> LOW </th>
+   <th style="text-align:right;"> MODERATE </th>
+   <th style="text-align:left;"> Total, N (v/kbgl) </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> ORF1ab </td>
+   <td style="text-align:right;"> 21393 </td>
+   <td style="text-align:right;"> 41 </td>
+   <td style="text-align:right;"> 466 </td>
+   <td style="text-align:right;"> 1234 </td>
+   <td style="text-align:left;"> 1741 (81.38) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> S </td>
+   <td style="text-align:right;"> 3822 </td>
+   <td style="text-align:right;"> 32 </td>
+   <td style="text-align:right;"> 141 </td>
+   <td style="text-align:right;"> 287 </td>
+   <td style="text-align:left;"> 460 (120.36) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ORF3a </td>
+   <td style="text-align:right;"> 828 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 32 </td>
+   <td style="text-align:right;"> 62 </td>
+   <td style="text-align:left;"> 97 (117.15) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> E </td>
+   <td style="text-align:right;"> 228 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:left;"> 22 (96.49) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> M </td>
+   <td style="text-align:right;"> 669 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> 42 </td>
+   <td style="text-align:left;"> 58 (86.7) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ORF6 </td>
+   <td style="text-align:right;"> 186 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> 14 </td>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:left;"> 16 (86.02) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ORF7a </td>
+   <td style="text-align:right;"> 366 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> 16 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:left;"> 27 (73.77) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ORF7b </td>
+   <td style="text-align:right;"> 132 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:left;"> 2 (15.15) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ORF8 </td>
+   <td style="text-align:right;"> 366 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:right;"> 16 </td>
+   <td style="text-align:left;"> 26 (71.04) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> N </td>
+   <td style="text-align:right;"> 1260 </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 60 </td>
+   <td style="text-align:right;"> 139 </td>
+   <td style="text-align:left;"> 204 (161.9) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ORF10 </td>
+   <td style="text-align:right;"> 117 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:left;"> 8 (68.38) </td>
+  </tr>
+</tbody>
+</table> <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [["$","$"]]}})</script><script async src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

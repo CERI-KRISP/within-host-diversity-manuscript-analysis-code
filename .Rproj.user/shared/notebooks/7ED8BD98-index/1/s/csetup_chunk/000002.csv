@@ -1,0 +1,7 @@
+"0","## setup environment"
+"0","knitr::opts_chunk$set(echo = TRUE, "
+"0","                      out.height = ""\\textheight"",  "
+"0","                      out.width = ""\\textwidth"","
+"0","                      out.extra = ""keepaspectratio=false"")"
+"0","##Penalty for scientific notation"
+"0","options(scipen=2000) "

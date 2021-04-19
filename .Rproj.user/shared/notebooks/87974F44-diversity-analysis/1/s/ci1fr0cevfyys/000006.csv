@@ -1,0 +1,38 @@
+"0","df_all_ch3_pairs_sd_shared_l1_norm <- plyr::adply(as_tibble(df_all_ch3_pairs_sd_shared), 1, summarize, L1_norm = dist_tp(c(donor_id, recipient_id), snv = df_snvs_isnvs_purged)) # Get the genetic distance between pairs! Takes the longest."
+"0","#View(possible_pairs.dist_ch3)"
+"0","## L1_norm all sites dists"
+"0","## ~/temp/Collaborations/covid/whd/ch1_ch3/san_paper_l1norm_filtered_jan17.csv"
+"0","san_paper_l1norm_filtered_jan17 <- read_csv(""data/l1_norm.txt"")"
+"2","Missing column names filled in: 'X1' [1]"
+"2","Parsed with column specification:
+cols(
+  X1 = [32mcol_double()[39m,
+  Sample1 = [31mcol_character()[39m,
+  Sample2 = [31mcol_character()[39m,
+  L1norm = [32mcol_double()[39m,
+  comp = [32mcol_double()[39m,
+  n_sites = [32mcol_double()[39m
+)
+"
+"0","#View(san_paper_l1norm_filtered_jan17)"
+"0","san_paper_l1norm_filtered_jan17$Sample1 <- sapply(str_split(san_paper_l1norm_filtered_jan17$Sample1, "
+"0","                                               ""_"", n = 2, simplify = FALSE), `[`, 1)"
+"0","san_paper_l1norm_filtered_jan17$Sample2 <- sapply(str_split(san_paper_l1norm_filtered_jan17$Sample2, "
+"0","                                               ""_"", n = 2, simplify = FALSE), `[`, 1)"
+"0","san_paper_l1norm_filtered_jan17$X1 <- NULL"
+"0","san_paper_l1norm_filtered_jan17$pairId <- paste0(san_paper_l1norm_filtered_jan17$Sample1, ""_"", san_paper_l1norm_filtered_jan17$Sample2)"
+"0","df_all_ch3_pairs_sd_shared_l1_norm <- inner_join(df_all_ch3_pairs_sd_shared_l1_norm, san_paper_l1norm_filtered_jan17, by = ""pairId"")"
+"0","ggscatter(df_all_ch3_pairs_sd_shared_l1_norm, x = ""days_between_samples"", y = ""L1norm"","
+"0","                 add = ""reg.line"",  # Add regressin line"
+"0","                 add.params = list(color = ""blue"", fill = ""lightgray""), # Customize reg. line"
+"0","                 conf.int = TRUE # Add confidence interval"
+"0","  )+ xlab(""No. of days between samples"") +"
+"0","  ylab(""L1_norm"") + "
+"0","  #facet_grid(cols = vars(Sample)) +"
+"0","  stat_cor(method = ""pearson"") + "
+"0","  theme_bw()+"
+"0","  theme(axis.title.x = element_text(size=15),"
+"0","        axis.title.y = element_text(size=15),"
+"0","        axis.text=element_text(size=12),"
+"0","        legend.title = element_text(size = 15),"
+"0","        legend.text = element_text(size = 12))"

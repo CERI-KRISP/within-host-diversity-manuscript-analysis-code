@@ -1,0 +1,29 @@
+"0","CH1_CH3_purged_snpdists_molten <- read_delim(""~/temp/Collaborations/covid/whd/snp_dists/CH1_CH3_purged_snpdists_molten.tsv"", "
+"0","    ""\t"", escape_double = FALSE, col_names = FALSE, "
+"0","    trim_ws = TRUE)"
+"2","Parsed with column specification:
+cols(
+  X1 = [31mcol_character()[39m,
+  X2 = [31mcol_character()[39m,
+  X3 = [32mcol_double()[39m
+)
+"
+"0","colnames(CH1_CH3_purged_snpdists_molten) <- c(""genome1"", ""genome2"", ""snpdist"")"
+"0","##View(CH1_CH3_purged_snpdists_molten)"
+"0","CH1_CH3_purged_snpdists_molten$genome1 <- sapply(str_split(CH1_CH3_purged_snpdists_molten$genome1, ""/"", n = 2, simplify = FALSE), `[`, 2)"
+"0","CH1_CH3_purged_snpdists_molten$genome1 <- gsub(""/2020"","""", CH1_CH3_purged_snpdists_molten$genome1)"
+"0","CH1_CH3_purged_snpdists_molten$genome2 <- sapply(str_split(CH1_CH3_purged_snpdists_molten$genome2, ""/"", n = 2, simplify = FALSE), `[`, 2)"
+"0","CH1_CH3_purged_snpdists_molten$genome2 <- gsub(""/2020"","""", CH1_CH3_purged_snpdists_molten$genome2)"
+"0","CH1_Epi_Ids <- read_csv(""~/temp/Collaborations/covid/whd/ch1_ch3/100/CH1_Epi_Ids.txt"", "
+"0","    col_names = FALSE)"
+"2","Parsed with column specification:
+cols(
+  X1 = [31mcol_character()[39m
+)
+"
+"0","CH1_Epi_Ids_collapse <- paste0(CH1_Epi_Ids$X1, collapse = ""|"")"
+"0","CH1_purged_snpdists <- CH1_CH3_purged_snpdists_molten[grepl(CH1_Epi_Ids_collapse, CH1_CH3_purged_snpdists_molten$genome1), ]"
+"0","CH1_purged_snpdists <- CH1_purged_snpdists[grepl(CH1_Epi_Ids_collapse, CH1_purged_snpdists$genome2), ]"
+"0","minus_ <- paste0(c(""KRISP-0065"",""KRISP-0065"", ""KRISP-0074"", ""CH3""), collapse = ""|"")"
+"0","CH1_purged_snpdists <- CH1_purged_snpdists[!grepl(minus_, CH1_purged_snpdists$genome1), ]"
+"0","CH1_purged_snpdists <- CH1_purged_snpdists[!grepl(minus_, CH1_purged_snpdists$genome2), ]"

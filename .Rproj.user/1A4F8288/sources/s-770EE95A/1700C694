@@ -5,15 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "1682008936",
+    "hash" : "0",
     "id" : "1700C694",
-    "lastKnownWriteTime" : 1618861439,
-    "last_content_update" : 1618861439617,
+    "lastKnownWriteTime" : 1618903436,
+    "last_content_update" : 1618903437011,
     "path" : "~/temp/Collaborations/covid/whd/analysis/diversity-analysis.Rmd",
     "project_path" : "diversity-analysis.Rmd",
     "properties" : {
-        "cursorPosition" : "827,1",
-        "scrollLine" : "825"
+        "cursorPosition" : "938,21",
+        "scrollLine" : "918"
     },
     "relative_order" : 2,
     "source_on_save" : false,
